@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoQuest: Interactive Conservation Adventure</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .btn-hover {
+            transition: all 0.3s ease;
+        }
+        .btn-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .story-text {
+            line-height: 1.6;
+        }
+        .health-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .wildlife-item {
+            transition: all 0.3s ease;
+        }
+        .wildlife-item:hover {
+            transform: scale(1.05);
+        }
+        .seasonal-bg {
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 25%, #ffd3b6 50%, #ffaaa5 75%, #ff8b94 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 30s ease infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .typewriter {
+            overflow: hidden;
+            border-right: .15em solid green;
+            white-space: nowrap;
+            margin: 0 auto;
+            letter-spacing: .15em;
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: green; }
+        }
+    </style>
+</head>
+<body class="seasonal-bg min-h-screen">
+    <div id="root" class="min-h-screen"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Enhanced ecosystem data with more metrics
+        const initialEcosystemData = {
+            shrubsPlanted: 0,
+            treesPlanted: 0,
+            wildlifeObserved: [],
+            invasiveSpeciesRemoved: 0,
+            ecosystemHealth: 50,
+            biodiversityIndex: 30,
+            carbonSequestration: 0,
+            waterQuality: 40,
+            locationsVisited: ['degraded_riparian'],
+            season: 'spring',
+            day: 1,
+            budget: 1000,
+            reputation: 50,
+            educationLevel: 0,
+            volunteers: 0,
+            historicalData: [{day: 1, health: 50, biodiversity: 30, waterQuality: 40}]
+        };
+
+        // Expanded story elements
+        const initialStoryLog = [
+            "🌿 Welcome to EcoQuest! Your mission is to restore balance to this ecosystem.",
+            "You arrive at a degraded riparian zone. The soil is dry, weeds dominate, and a small creek flows nearby."
+        ];
+
+        // More diverse initial choices
+        const initialChoices = [
+            { id: "plant_shrubs", text: "Plant native shrubs", cost: 50, time: 1 },
+            { id: "remove_weeds", text: "Remove weeds manually", cost: 20, time: 1 },
+            { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
+            { id: "explore", text: "Explore downstream", cost: 0, time: 1 }
+        ];
+
+        // Expanded locations with unique properties
+        const locations = {
+            degraded_riparian: {
+                name: "Degraded Riparian Zone",
+                description: "A damaged creek ecosystem with erosion issues and invasive species.",
+                restorationPotential: "High",
+                keySpecies: ["frogs", "birds", "insects"],
+                threats: ["erosion", "invasive plants", "water pollution"]
+            },
+            downstream: {
+                name: "Downstream Area",
+                description: "The lower section of the creek with slower water flow.",
+                restorationPotential: "Medium",
+                keySpecies: ["fish", "turtles", "waterfowl"],
+                threats: ["sedimentation", "pollutant accumulation"]
+            },
+            wetland: {
+                name: "Wetland Area",
+                description: "A water-saturated area that filters water and provides habitat.",
+                restorationPotential: "Very High",
+                keySpecies: ["amphibians", "waterfowl", "aquatic plants"],
+                threats: ["drainage", "invasive species", "water diversion"]
+            },
+            meadow: {
+                name: "Wildflower Meadow",
+                description: "An open grassland area with native flowering plants.",
+                restorationPotential: "Medium",
+                keySpecies: ["pollinators", "small mammals", "birds"],
+                threats: ["invasive grasses", "overgrazing", "development"]
+            },
+            forest: {
+                name: "Oak Woodland",
+                description: "A mature forest with canopy trees and diverse understory.",
+                restorationPotential: "Low",
+                keySpecies: ["deer", "squirrels", "birds of prey", "fungi"],
+                threats: ["disease", "logging", "climate change"]
+            }
+        };
+
+        // Wildlife database with properties
+        const wildlifeDatabase = {
+            frogs: { name: "Pacific Tree Frogs", rarity: "common", habitat: "riparian", indicator: "water quality" },
+            birds: { name: "Songbirds", rarity: "common", habitat: "varied", indicator: "ecosystem health" },
+            insects: { name: "Native Pollinators", rarity: "common", habitat: "varied", indicator: "plant diversity" },
+            fish: { name: "Native Trout", rarity: "uncommon", habitat: "stream", indicator: "water quality" },
+            turtles: { name: "Western Pond Turtles", rarity: "rare", habitat: "ponds", indicator: "habitat quality" },
+            waterfowl: { name: "Waterfowl", rarity: "common", habitat: "wetland", indicator: "wetland health" },
+            amphibians: { name: "Salamanders", rarity: "uncommon", habitat: "wetland", indicator: "moisture levels" },
+            deer: { name: "Black-tailed Deer", rarity: "common", habitat: "forest", indicator: "habitat size" },
+            squirrels: { name: "Western Gray Squirrels", rarity: "common", habitat: "forest", indicator: "forest health" },
+            raptors: { name: "Birds of Prey", rarity: "uncommon", habitat: "varied", indicator: "food web integrity" }
+        };
+
+        // AI model simulation with more sophisticated responses
+        const generateAIResponse = (choice, ecosystemData, location) => {
+            // Contextual responses based on multiple factors
+            const { ecosystemHealth, biodiversityIndex, waterQuality, season } = ecosystemData;
+            
+            const responses = {
+                "plant_shrubs": [
+                    `You plant native shrubs along the creek bank. ${season === 'spring' ? 'The spring rains will help them establish quickly.' : ''}`,
+                    "Native shrubs take root, providing habitat for small animals and insects.",
+                    "The newly planted shrubs help reduce erosion along the water's edge."
+                ],
+                "remove_weeds": [
+                    `You remove invasive species. ${waterQuality < 50 ? 'You notice the water looks clearer already.' : ''}`,
+                    "Manual weeding is slow but effective. You clear a small area of invasive species.",
+                    "Removing weeds reduces competition for water and nutrients."
+                ],
+                "observe_wildlife": [
+                    `You spot ${ecosystemHealth > 60 ? 'increased wildlife activity' : 'signs of struggling wildlife'}.`,
+                    `${season === 'spring' ? 'Spring brings new life to the area.' : ''} You notice animal tracks and feeding signs.`,
+                    "Careful observation reveals how species are interacting with the habitat."
+                ],
+                "explore": [
+                    `You follow the creek and discover new areas. ${biodiversityIndex > 40 ? 'The biodiversity seems richer here.' : ''}`,
+                    "Exploring reveals connections between different parts of the ecosystem.",
+                    "You find a area that would benefit from restoration efforts."
+                ],
+                "plant_trees": [
+                    "You plant willow trees along the bank. Their roots will stabilize the soil and provide shade.",
+                    "Tree planting creates future canopy cover, cooling the water for aquatic life.",
+                    "New trees will eventually provide nesting sites for birds and habitat for insects."
+                ],
+                "build_habitat": [
+                    "You construct brush piles for small mammals and reptiles to shelter in.",
+                    "Creating rock formations in the creek provides hiding places for fish and amphibians.",
+                    "Installing nest boxes attracts birds that help control insects."
+                ],
+                "test_water": [
+                    "You test the creek's pH and find it slightly acidic but within acceptable range.",
+                    "Water testing reveals good oxygen levels but some sediment pollution.",
+                    "The water quality is improving but still shows signs of upstream agricultural runoff."
+                ],
+                "continue_exploring": [
+                    "You venture further and find an abandoned farm field that could be restored to prairie.",
+                    "Exploring reveals a hillside with erosion issues that need addressing.",
+                    "You discover a beautiful wildflower meadow that supports pollinators."
+                ],
+                "check_wetland": [
+                    "The wetland is thriving with cattails, frogs, and aquatic insects.",
+                    "You notice invasive phragmites are starting to take over part of the wetland.",
+                    "The wetland acts as a natural filter, improving water quality downstream."
+                ],
+                "educational_program": [
+                    "You organize a community workshop on native plants. Attendance is good!",
+                    "Local students participate in a habitat restoration field day.",
+                    "Your educational efforts raise awareness about ecosystem conservation."
+                ],
+                "fundraiser": [
+                    "You host a fundraiser and attract support from local businesses.",
+                    "Community members donate to support your conservation work.",
+                    "Your fundraising efforts secure resources for future projects."
+                ],
+                "recruit_volunteers": [
+                    "You post volunteer opportunities and several people sign up to help.",
+                    "Local community groups offer to participate in restoration days.",
+                    "Your volunteer recruitment brings new energy and resources to the project."
+                ],
+                "research_grants": [
+                    "You apply for and receive a small research grant to study the ecosystem.",
+                    "A university partner provides funding for monitoring equipment.",
+                    "Your grant application is successful, providing funds for restoration."
+                ]
+            };
+
+            // Select a random response from the appropriate array
+            const possibleResponses = responses[choice.id] || [
+                "Your action has consequences for the ecosystem.",
+                "The environment responds to your intervention.",
+                "Nature adapts to your conservation efforts."
+            ];
+            
+            return possibleResponses[Math.floor(Math.random() * possibleResponses.length)];
+        };
+
+        // More sophisticated ecosystem update function
+        const updateEcosystem = (choice, ecosystemData, currentLocation) => {
+            const updatedData = { ...ecosystemData };
+            
+            // Update based on action
+            switch(choice.id) {
+                case "plant_shrubs":
+                    updatedData.shrubsPlanted += 1;
+                    updatedData.ecosystemHealth += 5;
+                    updatedData.biodiversityIndex += 3;
+                    updatedData.carbonSequestration += 0.5;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "plant_trees":
+                    updatedData.treesPlanted += 1;
+                    updatedData.ecosystemHealth += 8;
+                    updatedData.biodiversityIndex += 5;
+                    updatedData.carbonSequestration += 5;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "remove_weeds":
+                    updatedData.invasiveSpeciesRemoved += 1;
+                    updatedData.ecosystemHealth += 3;
+                    updatedData.biodiversityIndex += 2;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "observe_wildlife":
+                    // Random chance to discover new wildlife based on biodiversity
+                    if (Math.random() < updatedData.biodiversityIndex / 100 && updatedData.wildlifeObserved.length < Object.keys(wildlifeDatabase).length) {
+                        const possibleNewSpecies = Object.keys(wildlifeDatabase).filter(
+                            species => !updatedData.wildlifeObserved.includes(species)
+                        );
+                        if (possibleNewSpecies.length > 0) {
+                            const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
+                            updatedData.wildlifeObserved.push(newSpecies);
+                            updatedData.biodiversityIndex += 2;
+                        }
+                    }
+                    updatedData.ecosystemHealth += 1;
+                    break;
+                case "explore":
+                    if (!updatedData.locationsVisited.includes('downstream')) {
+                        updatedData.locationsVisited.push('downstream');
+                    }
+                    updatedData.ecosystemHealth += 1;
+                    break;
+                case "check_wetland":
+                    if (!updatedData.locationsVisited.includes('wetland')) {
+                        updatedData.locationsVisited.push('wetland');
+                    }
+                    if (!updatedData.wildlifeObserved.includes('waterfowl')) {
+                        updatedData.wildlifeObserved.push('waterfowl');
+                    }
+                    updatedData.ecosystemHealth += 4;
+                    updatedData.waterQuality += 3;
+                    break;
+                case "educational_program":
+                    updatedData.educationLevel += 10;
+                    updatedData.reputation += 5;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "fundraiser":
+                    updatedData.budget += 200 + Math.floor(Math.random() * 300);
+                    updatedData.reputation += 3;
+                    break;
+                case "recruit_volunteers":
+                    updatedData.volunteers += 2 + Math.floor(Math.random() * 4);
+                    updatedData.reputation += 4;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "research_grants":
+                    updatedData.budget += 1000 + Math.floor(Math.random() * 1500);
+                    updatedData.reputation += 8;
+                    break;
+                default:
+                    updatedData.ecosystemHealth += 1;
+            }
+            
+            // Update day and possibly season
+            updatedData.day += choice.time || 1;
+            if (updatedData.day % 30 === 0) {
+                const seasons = ['spring', 'summer', 'fall', 'winter'];
+                const currentSeasonIndex = seasons.indexOf(updatedData.season);
+                updatedData.season = seasons[(currentSeasonIndex + 1) % 4];
+                
+                // Seasonal effects
+                if (updatedData.season === 'spring') {
+                    updatedData.ecosystemHealth += 5; // Spring growth
+                } else if (updatedData.season === 'winter') {
+                    updatedData.ecosystemHealth -= 2; // Winter stress
+                }
+            }
+            
+            // Natural processes - ecosystem changes over time
+            if (updatedData.ecosystemHealth > 70) {
+                updatedData.biodiversityIndex += 1; // Healthy ecosystems become more diverse
+            }
+            
+            if (updatedData.waterQuality < 50 && updatedData.day % 5 === 0) {
+                updatedData.ecosystemHealth -= 1; // Poor water quality has ongoing effects
+            }
+            
+            // Volunteer effects
+            if (updatedData.volunteers > 0) {
+                updatedData.ecosystemHealth += Math.floor(updatedData.volunteers / 5);
+            }
+            
+            // Cap values
+            updatedData.ecosystemHealth = Math.min(Math.max(updatedData.ecosystemHealth, 0), 100);
+            updatedData.biodiversityIndex = Math.min(Math.max(updatedData.biodiversityIndex, 0), 100);
+            updatedData.waterQuality = Math.min(Math.max(updatedData.waterQuality, 0), 100);
+            
+            // Add to historical data
+            updatedData.historicalData.push({
+                day: updatedData.day,
+                health: updatedData.ecosystemHealth,
+                biodiversity: updatedData.biodiversityIndex,
+                waterQuality: updatedData.waterQuality
+            });
+            
+            return updatedData;
+        };
+
+        // More dynamic choice generation
+        const getNextChoices = (ecosystemData, currentLocation) => {
+            const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited } = ecosystemData;
+            
+            const baseChoices = [
+                { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
+                { id: "explore", text: "Explore new areas", cost: 0, time: 1 }
+            ];
+            
+            const specialChoices = [];
+            
+            // Restoration actions
+            if (budget >= 50) {
+                specialChoices.push({ id: "plant_shrubs", text: "Plant native shrubs", cost: 50, time: 1 });
+            }
+            
+            if (budget >= 20) {
+                specialChoices.push({ id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 });
+            }
+            
+            if (locationsVisited.includes('downstream') && budget >= 100) {
+                specialChoices.push({ id: "plant_trees", text: "Plant trees", cost: 100, time: 2 });
+            }
+            
+            if (locationsVisited.includes('wetland')) {
+                specialChoices.push({ id: "check_wetland", text: "Monitor wetland health", cost: 0, time: 1 });
+            }
+            
+            if (ecosystemHealth > 70 && budget >= 150) {
+                specialChoices.push({ id: "build_habitat", text: "Build habitat structures", cost: 150, time: 2 });
+            }
+            
+            if (ecosystemHealth > 60 && budget >= 80) {
+                specialChoices.push({ id: "test_water", text: "Conduct water quality tests", cost: 80, time: 1 });
+            }
+            
+            // Community engagement actions
+            if (reputation >= 30 && budget >= 100) {
+                specialChoices.push({ id: "educational_program", text: "Run educational program", cost: 100, time: 2 });
+            }
+            
+            if (reputation >= 20) {
+                specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 50, time: 2 });
+            }
+            
+            if (reputation >= 40) {
+                specialChoices.push({ id: "recruit_volunteers", text: "Recruit volunteers", cost: 30, time: 1 });
+            }
+            
+            if (educationLevel >= 50 && reputation >= 60) {
+                specialChoices.push({ id: "research_grants", text: "Apply for research grants", cost: 100, time: 3 });
+            }
+            
+            // Always include "End Adventure" once significant progress is made
+            if (ecosystemHealth > 40 || biodiversityIndex > 35) {
+                specialChoices.push({ id: "end_adventure", text: "End Adventure", cost: 0, time: 0 });
+            }
+            
+            // Return 3-5 choices
+            const allChoices = [...new Set([...specialChoices, ...baseChoices])];
+            return allChoices.slice(0, 5);
+        };
+
+        // Chart component for data visualization
+        const EcosystemChart = ({ data }) => {
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            
+            useEffect(() => {
+                if (chartRef.current) {
+                    const ctx = chartRef.current.getContext('2d');
+                    
+                    // Destroy previous chart if it exists
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                    
+                    // Create new chart
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(d => `Day ${d.day}`),
+                            datasets: [
+                                {
+                                    label: 'Ecosystem Health',
+                                    data: data.map(d => d.health),
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    tension: 0.1,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Biodiversity Index',
+                                    data: data.map(d => d.biodiversity),
+                                    borderColor: 'rgb(153, 102, 255)',
+                                    tension: 0.1,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Water Quality',
+                                    data: data.map(d => d.waterQuality),
+                                    borderColor: 'rgb(54, 162, 235)',
+                                    tension: 0.1,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Ecosystem Metrics Over Time'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [data]);
+            
+            return <canvas ref={chartRef} />;
+        };
+
+        // Main component
+        function EcoQuest() {
+            const [gameStarted, setGameStarted] = useState(false);
+            const [gameCompleted, setGameCompleted] = useState(false);
+            const [storyLog, setStoryLog] = useState(initialStoryLog);
+            const [ecosystemData, setEcosystemData] = useState(initialEcosystemData);
+            const [currentChoices, setCurrentChoices] = useState(initialChoices);
+            const [currentLocation, setCurrentLocation] = useState('degraded_riparian');
+            const [showCharts, setShowCharts] = useState(false);
+
+            const handleChoice = (choice) => {
+                if (choice.id === "end_adventure") {
+                    setGameCompleted(true);
+                    return;
+                }
+                
+                // Generate AI response
+                const response = generateAIResponse(choice, ecosystemData, currentLocation);
+                
+                // Update ecosystem data
+                const updatedEcosystem = updateEcosystem(choice, ecosystemData, currentLocation);
+                setEcosystemData(updatedEcosystem);
+                
+                // Update story log
+                setStoryLog(prevLog => [...prevLog, `> ${choice.text}`, response]);
+                
+                // Determine next choices
+                const nextChoices = getNextChoices(updatedEcosystem, currentLocation);
+                setCurrentChoices(nextChoices);
+                
+                // Possibly change location based on exploration
+                if (choice.id === "explore" && updatedEcosystem.locationsVisited.length > ecosystemData.locationsVisited.length) {
+                    const newLocation = updatedEcosystem.locationsVisited[updatedEcosystem.locationsVisited.length - 1];
+                    setCurrentLocation(newLocation);
+                    setStoryLog(prevLog => [...prevLog, `You've discovered a new area: ${locations[newLocation].name}!`]);
+                }
+            };
+
+            const startGame = () => {
+                setGameStarted(true);
+            };
+
+            const restartGame = () => {
+                setGameStarted(false);
+                setGameCompleted(false);
+                setStoryLog(initialStoryLog);
+                setEcosystemData(initialEcosystemData);
+                setCurrentChoices(initialChoices);
+                setCurrentLocation('degraded_riparian');
+            };
+
+            // Auto-scroll to bottom of story panel
+            const storyPanelRef = useRef(null);
+            useEffect(() => {
+                if (storyPanelRef.current) {
+                    storyPanelRef.current.scrollTop = storyPanelRef.current.scrollHeight;
+                }
+            }, [storyLog]);
+
+            return (
+                <div className="min-h-screen p-4 md:p-6">
+                    {!gameStarted ? (
+                        // Landing Page
+                        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-10 text-center fade-in">
+                            <h1 className="text-4xl font-bold text-green-800 mb-4">🌱 EcoQuest</h1>
+                            <h2 className="text-2xl font-semibold text-green-700 mb-6">Interactive Ecosystem Management</h2>
+                            <p className="text-gray-600 mb-8 text-lg">
+                                Embark on an interactive conservation adventure where your choices shape the ecosystem. 
+                                Restore balance to a degraded landscape and witness how your actions impact wildlife and habitat health.
+                            </p>
+                            <button 
+                                onClick={startGame}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 transform hover:scale-105 btn-hover pulse-animation"
+                            >
+                                Start Adventure
+                            </button>
+                            
+                            <div className="mt-10 border-t pt-6">
+                                <h3 className="text-lg font-medium text-green-700 mb-3">How to Play</h3>
+                                <ul className="text-left text-gray-600 space-y-2 max-w-md mx-auto">
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">•</span>
+                                        <span>Make strategic choices to restore the ecosystem</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">•</span>
+                                        <span>Manage limited resources and budget effectively</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">•</span>
+                                        <span>Track multiple environmental metrics over time</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">•</span>
+                                        <span>Discover new locations and wildlife species</span>
+                                    </li>
+                                    <li className="flex items-start">
+                                        <span className="text-green-500 mr-2">•</span>
+                                        <span>Engage the community to support your efforts</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    ) : gameCompleted ? (
+                        // Game Completion Screen
+                        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-10 text-center fade-in">
+                            <h1 className="text-4xl font-bold text-green-800 mb-4">🏆 Adventure Complete!</h1>
+                            <h2 className="text-2xl font-semibold text-green-700 mb-6">Your Conservation Results</h2>
+                            
+                            <div className="mb-6 p-4 bg-green-50 rounded-lg">
+                                <h3 className="text-lg font-medium text-green-700 mb-2">Final Ecosystem Health: {ecosystemData.ecosystemHealth}%</h3>
+                                <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                                    <div 
+                                        className="bg-green-600 h-4 rounded-full transition-all duration-500 health-bar" 
+                                        style={{ width: `${ecosystemData.ecosystemHealth}%` }}
+                                    ></div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 text-left">
+                                    <div>
+                                        <p className="font-medium">Biodiversity Index</p>
+                                        <p>{ecosystemData.biodiversityIndex}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Water Quality</p>
+                                        <p>{ecosystemData.waterQuality}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Carbon Sequestered</p>
+                                        <p>{ecosystemData.carbonSequestration.toFixed(1)} tons</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-medium">Species Observed</p>
+                                        <p>{ecosystemData.wildlifeObserved.length}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                onClick={restartGame}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 transform hover:scale-105 btn-hover mt-4"
+                            >
+                                Play Again
+                            </button>
+                            
+                            <div className="mt-6">
+                                <button 
+                                    onClick={() => setShowCharts(!showCharts)}
+                                    className="text-green-600 hover:text-green-800 font-medium"
+                                >
+                                    {showCharts ? 'Hide' : 'Show'} Progress Charts
+                                </button>
+                                
+                                {showCharts && (
+                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                                        <EcosystemChart data={ecosystemData.historicalData} />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        // Game Interface
+                        <div className="max-w-6xl mx-auto fade-in">
+                            <header className="flex justify-between items-center mb-6">
+                                <h1 className="text-3xl font-bold text-green-800 flex items-center">
+                                    <span className="mr-2">🌿</span> EcoQuest
+                                </h1>
+                                <div className="flex items-center space-x-4">
+                                    <div className="bg-white rounded-lg py-1 px-3 shadow-sm">
+                                        <span className="text-green-700 font-medium">Day {ecosystemData.day}</span>
+                                        <span className="mx-2">•</span>
+                                        <span className="text-green-600 capitalize">{ecosystemData.season}</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowCharts(!showCharts)}
+                                        className="bg-white hover:bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg transition btn-hover flex items-center"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        {showCharts ? 'Hide Charts' : 'Show Charts'}
+                                    </button>
+                                    <button 
+                                        onClick={restartGame}
+                                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition btn-hover flex items-center"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                                        </svg>
+                                        Restart
+                                    </button>
+                                </div>
+                            </header>
+                            
+                            {showCharts && (
+                                <div className="mb-6 bg-white rounded-xl shadow-md p-4">
+                                    <EcosystemChart data={ecosystemData.historicalData} />
+                                </div>
+                            )}
+                            
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Story Panel */}
+                                <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6">
+                                    <h2 className="text-xl font-semibold text-green-700 mb-4 flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                        </svg>
+                                        Your Adventure at {locations[currentLocation].name}
+                                    </h2>
+                                    <div 
+                                        ref={storyPanelRef}
+                                        className="h-96 overflow-y-auto mb-4 p-4 bg-green-50 rounded-lg border border-green-200"
+                                    >
+                                        {storyLog.map((msg, idx) => (
+                                            <p key={idx} className="mb-3 text-gray-700 story-text">{msg}</p>
+                                        ))}
+                                    </div>
+                                    
+                                    {/* Choice Buttons */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                                        {currentChoices.map((choice, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handleChoice(choice)}
+                                                disabled={ecosystemData.budget < choice.cost}
+                                                className={`${ecosystemData.budget < choice.cost ? 
+                                                    'bg-gray-300 cursor-not-allowed' : 
+                                                    'bg-green-500 hover:bg-green-600'} 
+                                                    text-white font-medium py-3 px-4 rounded-lg transition duration-300 transform hover:scale-105 btn-hover flex items-center justify-center`}
+                                            >
+                                                {choice.cost > 0 && (
+                                                    <span className="mr-2 bg-green-700 rounded-full px-2 py-1 text-xs">
+                                                        ${choice.cost}
+                                                    </span>
+                                                )}
+                                                {choice.text}
+                                                {choice.time > 1 && (
+                                                    <span className="ml-2 bg-green-700 rounded-full px-2 py-1 text-xs">
+                                                        {choice.time}d
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                
+                                {/* Stats Panel */}
+                                <div className="bg-white rounded-xl shadow-md p-6">
+                                    <h2 className="text-xl font-semibold text-green-700 mb-4 flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clipRule="evenodd" />
+                                        </svg>
+                                        Ecosystem Dashboard
+                                    </h2>
+                                    
+                                    <div className="mb-6">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-gray-600">Overall Health</span>
+                                            <span className="font-semibold">{ecosystemData.ecosystemHealth}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                                            <div 
+                                                className="bg-green-600 h-4 rounded-full transition-all duration-500 health-bar" 
+                                                style={{ width: `${ecosystemData.ecosystemHealth}%` }}
+                                            ></div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-gray-600">Biodiversity</span>
+                                            <span className="font-semibold">{ecosystemData.biodiversityIndex}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+                                            <div 
+                                                className="bg-purple-500 h-4 rounded-full transition-all duration-500 health-bar" 
+                                                style={{ width: `${ecosystemData.biodiversityIndex}%` }}
+                                            ></div>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-gray-600">Water Quality</span>
+                                            <span className="font-semibold">{ecosystemData.waterQuality}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-4">
+                                            <div 
+                                                className="bg-blue-500 h-4 rounded-full transition-all duration-500 health-bar" 
+                                                style={{ width: `${ecosystemData.waterQuality}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center justify-between">
+                                                <span>Resources</span>
+                                                <span className="text-lg font-bold text-green-600">${ecosystemData.budget}</span>
+                                            </h3>
+                                            <ul className="space-y-2">
+                                                <li className="flex justify-between">
+                                                    <span className="flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                                                        </svg>
+                                                        Shrubs Planted
+                                                    </span>
+                                                    <span className="font-semibold">{ecosystemData.shrubsPlanted}</span>
+                                                </li>
+                                                <li className="flex justify-between">
+                                                    <span className="flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                                                        </svg>
+                                                        Trees Planted
+                                                    </span>
+                                                    <span className="font-semibold">{ecosystemData.treesPlanted}</span>
+                                                </li>
+                                                <li className="flex justify-between">
+                                                    <span className="flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                                                        </svg>
+                                                        Invasives Removed
+                                                    </span>
+                                                    <span className="font-semibold">{ecosystemData.invasiveSpeciesRemoved}</span>
+                                                </li>
+                                                <li className="flex justify-between">
+                                                    <span className="flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                                        </svg>
+                                                        Volunteers
+                                                    </span>
+                                                    <span className="font-semibold">{ecosystemData.volunteers}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                                                </svg>
+                                                Wildlife Observed
+                                            </h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {ecosystemData.wildlifeObserved.length > 0 ? (
+                                                    ecosystemData.wildlifeObserved.map((animal, idx) => (
+                                                        <span key={idx} className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full wildlife-item flex items-center">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                                                            </svg>
+                                                            {wildlifeDatabase[animal]?.name || animal}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-gray-500">No wildlife observed yet</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                                </svg>
+                                                Locations Discovered
+                                            </h3>
+                                            <div className="flex flex-wrap gap-2">
+                                                {ecosystemData.locationsVisited.map((location, idx) => (
+                                                    <span key={idx} className="bg-yellow-100 text-yellow-800 text-sm px-3 py-1 rounded-full flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                                        </svg>
+                                                        {locations[location]?.name || location.replace('_', ' ')}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<EcoQuest />);
+    </script>
+</body>
+</html>
