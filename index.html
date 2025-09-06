@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoQuest: Interactive Conservation Adventure</title>
+    <title>EcoQuest: Tasmania Conservation</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React and ReactDOM -->
@@ -101,13 +101,37 @@
             0% { background-color: rgba(239, 68, 68, 0.1); }
             100% { background-color: transparent; }
         }
+        .npc-portrait {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .tasmania-bg {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23e0f2e9" opacity="0.3"/><path d="M20,30 Q40,20 60,30 T100,40 L90,70 Q70,90 40,80 T10,60 Z" fill="%23a8e6cf" opacity="0.5"/></svg>');
+            background-size: cover;
+        }
     </style>
 </head>
-<body class="seasonal-bg min-h-screen">
+<body class="seasonal-bg tasmania-bg min-h-screen">
     <div id="root" class="min-h-screen"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
+
+        // Tasmania-specific wildlife and locations
+        const tasmaniaWildlife = {
+            tassie_devil: { name: "Tasmanian Devil", rarity: "endangered", habitat: "forest", indicator: "forest health", image: "🦘" },
+            wedge_eagle: { name: "Wedge-tailed Eagle", rarity: "vulnerable", habitat: "varied", indicator: "ecosystem health", image: "🦅" },
+            platypus: { name: "Platypus", rarity: "rare", habitat: "riparian", indicator: "water quality", image: "🦆" },
+            quoll: { name: "Eastern Quoll", rarity: "endangered", habitat: "forest", indicator: "habitat quality", image: "🐾" },
+            rosella: { name: "Green Rosella", rarity: "common", habitat: "forest", indicator: "forest health", image: "🐦" },
+            pademelon: { name: "Tasmanian Pademelon", rarity: "common", habitat: "forest", indicator: "understory health", image: "🦘" },
+            wombat: { name: "Common Wombat", rarity: "common", habitat: "forest", indicator: "soil health", image: "🐻" },
+            black_currawong: { name: "Black Currawong", rarity: "common", habitat: "forest", indicator: "forest health", image: "🐦" },
+            freshwater_lobster: { name: "Tasmanian Giant Freshwater Lobster", rarity: "endangered", habitat: "riparian", indicator: "water quality", image: "🦞" },
+            blue_gum: { name: "Tasmanian Blue Gum", rarity: "common", habitat: "forest", indicator: "forest maturity", image: "🌳" }
+        };
 
         // Enhanced ecosystem data with more metrics
         const initialEcosystemData = {
@@ -119,7 +143,7 @@
             biodiversityIndex: 30,
             carbonSequestration: 0,
             waterQuality: 40,
-            locationsVisited: ['degraded_riparian'],
+            locationsVisited: ['tarkine_forest'],
             season: 'spring',
             day: 1,
             budget: 1000,
@@ -127,113 +151,86 @@
             educationLevel: 0,
             volunteers: 0,
             historicalData: [{day: 1, health: 50, biodiversity: 30, waterQuality: 40}],
-            temperature: 20, // Celsius
-            rainfall: 50, // mm
+            temperature: 12, // Tasmania is cooler
+            rainfall: 80, // Tasmania has higher rainfall
             co2Level: 410, // ppm
             policiesEnacted: [],
             climateEvents: [],
-            multiplayerSession: null,
+            gameMode: 'solo', // 'solo' or 'team'
+            npcTeam: [],
             chatMessages: []
         };
 
-        // Expanded story elements
+        // Expanded story elements with Tasmania focus
         const initialStoryLog = [
-            "🌿 Welcome to EcoQuest! Your mission is to restore balance to this ecosystem.",
-            "You arrive at a degraded riparian zone. The soil is dry, weeds dominate, and a small creek flows nearby."
+            "🌿 Welcome to EcoQuest: Tasmania! Your mission is to restore balance to Tasmania's unique ecosystems.",
+            "You arrive in the Tarkine rainforest, one of the last temperate rainforests in the world with ancient myrtle trees and lush ferns."
         ];
 
         // More diverse initial choices
         const initialChoices = [
             { id: "plant_shrubs", text: "Plant native shrubs", cost: 50, time: 1 },
-            { id: "remove_weeds", text: "Remove weeds manually", cost: 20, time: 1 },
+            { id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 },
             { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
-            { id: "explore", text: "Explore downstream", cost: 0, time: 1 }
+            { id: "explore", text: "Explore nearby areas", cost: 0, time: 1 }
         ];
 
-        // Expanded locations with unique properties
+        // Tasmania-specific locations
         const locations = {
-            degraded_riparian: {
-                name: "Degraded Riparian Zone",
-                description: "A damaged creek ecosystem with erosion issues and invasive species.",
-                restorationPotential: "High",
-                keySpecies: ["frogs", "birds", "insects"],
-                threats: ["erosion", "invasive plants", "water pollution"],
-                coordinates: [37.7749, -122.4194], // San Francisco
-                biome: "riparian"
-            },
-            downstream: {
-                name: "Downstream Area",
-                description: "The lower section of the creek with slower water flow.",
-                restorationPotential: "Medium",
-                keySpecies: ["fish", "turtles", "waterfowl"],
-                threats: ["sedimentation", "pollutant accumulation"],
-                coordinates: [37.772, -122.418],
-                biome: "riparian"
-            },
-            wetland: {
-                name: "Wetland Area",
-                description: "A water-saturated area that filters water and provides habitat.",
+            tarkine_forest: {
+                name: "Tarkine Rainforest",
+                description: "A vast temperate rainforest with ancient myrtle trees, lush ferns, and pristine rivers.",
                 restorationPotential: "Very High",
-                keySpecies: ["amphibians", "waterfowl", "aquatic plants"],
-                threats: ["drainage", "invasive species", "water diversion"],
-                coordinates: [37.780, -122.415],
-                biome: "wetland"
+                keySpecies: ["tassie_devil", "quoll", "platypus", "blue_gum"],
+                threats: ["logging", "climate change", "invasive species"],
+                coordinates: [-41.2, 145.0], // Tarkine region
+                biome: "temperate_rainforest"
             },
-            meadow: {
-                name: "Wildflower Meadow",
-                description: "An open grassland area with native flowering plants.",
-                restorationPotential: "Medium",
-                keySpecies: ["pollinators", "small mammals", "birds"],
-                threats: ["invasive grasses", "overgrazing", "development"],
-                coordinates: [37.778, -122.425],
-                biome: "grassland"
-            },
-            forest: {
-                name: "Oak Woodland",
-                description: "A mature forest with canopy trees and diverse understory.",
-                restorationPotential: "Low",
-                keySpecies: ["deer", "squirrels", "birds of prey", "fungi"],
-                threats: ["disease", "logging", "climate change"],
-                coordinates: [37.770, -122.430],
-                biome: "forest"
-            },
-            coastal: {
-                name: "Coastal Dunes",
-                description: "Sandy coastal habitat with specialized plants and animals.",
+            cradle_mountain: {
+                name: "Cradle Mountain-Lake St Clair",
+                description: "An alpine area with rugged mountains, glacial lakes, and diverse alpine vegetation.",
                 restorationPotential: "High",
-                keySpecies: ["shorebirds", "crustaceans", "dune plants"],
-                threats: ["sea level rise", "erosion", "human disturbance"],
-                coordinates: [37.768, -122.511],
+                keySpecies: ["wombat", "pademelon", "wedge_eagle", "black_currawong"],
+                threats: ["climate change", "tourist impact", "feral animals"],
+                coordinates: [-41.65, 145.95], // Cradle Mountain
+                biome: "alpine"
+            },
+            freycinet: {
+                name: "Freycinet Peninsula",
+                description: "Coastal heathland with pink granite mountains, white sandy beaches, and abundant birdlife.",
+                restorationPotential: "Medium",
+                keySpecies: ["rosella", "wedge_eagle", "freshwater_lobster"],
+                threats: ["coastal erosion", "tourist impact", "development"],
+                coordinates: [-42.13, 148.3], // Freycinet
                 biome: "coastal"
             },
-            urban: {
-                name: "Urban Green Space",
-                description: "Park and garden areas within the city environment.",
+            maria_island: {
+                name: "Maria Island",
+                description: "A island sanctuary with convict history, diverse ecosystems, and reintroduced wildlife.",
+                restorationPotential: "High",
+                keySpecies: ["tassie_devil", "wombat", "pademelon", "rosella"],
+                threats: ["invasive species", "erosion", "climate change"],
+                coordinates: [-42.63, 148.0], // Maria Island
+                biome: "island"
+            },
+            macquarie_harbor: {
+                name: "Macquarie Harbor",
+                description: "A large harbor with salmon farms, historical sites, and important wetland habitats.",
                 restorationPotential: "Medium",
-                keySpecies: ["songbirds", "pollinators", "small mammals"],
-                threats: ["pollution", "fragmentation", "invasive species"],
-                coordinates: [37.779, -122.419],
-                biome: "urban"
+                keySpecies: ["platypus", "freshwater_lobster", "black_currawong"],
+                threats: ["aquaculture", "pollution", "water quality"],
+                coordinates: [-42.3, 145.3], // Macquarie Harbor
+                biome: "wetland"
             }
         };
 
-        // Wildlife database with properties
-        const wildlifeDatabase = {
-            frogs: { name: "Pacific Tree Frogs", rarity: "common", habitat: "riparian", indicator: "water quality", climateVulnerability: "medium" },
-            birds: { name: "Songbirds", rarity: "common", habitat: "varied", indicator: "ecosystem health", climateVulnerability: "low" },
-            insects: { name: "Native Pollinators", rarity: "common", habitat: "varied", indicator: "plant diversity", climateVulnerability: "high" },
-            fish: { name: "Native Trout", rarity: "uncommon", habitat: "stream", indicator: "water quality", climateVulnerability: "high" },
-            turtles: { name: "Western Pond Turtles", rarity: "rare", habitat: "ponds", indicator: "habitat quality", climateVulnerability: "high" },
-            waterfowl: { name: "Waterfowl", rarity: "common", habitat: "wetland", indicator: "wetland health", climateVulnerability: "medium" },
-            amphibians: { name: "Salamanders", rarity: "uncommon", habitat: "wetland", indicator: "moisture levels", climateVulnerability: "high" },
-            deer: { name: "Black-tailed Deer", rarity: "common", habitat: "forest", indicator: "habitat size", climateVulnerability: "low" },
-            squirrels: { name: "Western Gray Squirrels", rarity: "common", habitat: "forest", indicator: "forest health", climateVulnerability: "low" },
-            raptors: { name: "Birds of Prey", rarity: "uncommon", habitat: "varied", indicator: "food web integrity", climateVulnerability: "medium" },
-            foxes: { name: "Red Foxes", rarity: "uncommon", habitat: "varied", indicator: "ecosystem balance", climateVulnerability: "medium" },
-            butterflies: { name: "Monarch Butterflies", rarity: "uncommon", habitat: "meadow", indicator: "pollinator health", climateVulnerability: "high" },
-            crustaceans: { name: "Endemic Crabs", rarity: "rare", habitat: "coastal", indicator: "coastal health", climateVulnerability: "high" },
-            shorebirds: { name: "Migratory Shorebirds", rarity: "common", habitat: "coastal", indicator: "habitat connectivity", climateVulnerability: "high" }
-        };
+        // NPC team members
+        const npcTeamMembers = [
+            { id: "botanist", name: "Dr. Lily Chen", role: "Botanist", skills: ["plant_id", "restoration"], efficiency: 1.5, cost: 200, portrait: "👩‍🔬" },
+            { id: "ecologist", name: "David Wilson", role: "Ecologist", skills: ["wildlife", "monitoring"], efficiency: 1.3, cost: 180, portrait: "👨‍🔬" },
+            { id: "ranger", name: "Sarah Jones", role: "Park Ranger", skills: ["management", "community"], efficiency: 1.2, cost: 150, portrait: "👩‍💼" },
+            { id: "indigenous", name: "Michael Brown", role: "Indigenous Guide", skills: ["traditional_knowledge", "tracking"], efficiency: 1.4, cost: 170, portrait: "👨‍🎓" }
+        ];
 
         // Policy options with costs and effects
         const policyOptions = [
@@ -254,58 +251,13 @@
             { id: "storm", name: "Severe Storm", severity: "medium", effect: "Causes physical damage to restoration projects", healthImpact: -10, budgetImpact: -200 }
         ];
 
-        // Multiplayer session simulation
-        const simulateMultiplayerSession = () => {
-            const players = ["EcoWarrior42", "GreenThumb99", "NatureLover23", "Conservationist7"];
-            const actions = [
-                "planted native trees in the wetland area",
-                "removed invasive species from the riparian zone",
-                "organized a community cleanup event",
-                "documented new wildlife sightings",
-                "installed bird nesting boxes",
-                "tested water quality parameters",
-                "created habitat structures for small mammals"
-            ];
-            
-            return {
-                players: players.map(player => ({
-                    name: player,
-                    score: Math.floor(Math.random() * 1000),
-                    active: Math.random() > 0.3
-                })),
-                recentActions: Array(5).fill().map(() => ({
-                    player: players[Math.floor(Math.random() * players.length)],
-                    action: actions[Math.floor(Math.random() * actions.length)],
-                    time: `${Math.floor(Math.random() * 60)} minutes ago`
-                }))
-            };
-        };
-
-        // Function to fetch real weather data (simulated)
-        const fetchWeatherData = async (coordinates) => {
-            // In a real implementation, this would call an API like OpenWeatherMap
-            // For simulation purposes, we'll generate realistic data
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    const baseTemp = 15 + (Math.random() * 15); // 15-30°C
-                    const rainfall = Math.random() * 100; // 0-100mm
-                    resolve({
-                        temperature: Math.round(baseTemp * 10) / 10,
-                        rainfall: Math.round(rainfall * 10) / 10,
-                        conditions: rainfall > 50 ? "rainy" : rainfall > 30 ? "cloudy" : "sunny"
-                    });
-                }, 500);
-            });
-        };
-
         // AI model simulation with more sophisticated responses
         const generateAIResponse = (choice, ecosystemData, location) => {
-            // Contextual responses based on multiple factors
             const { ecosystemHealth, biodiversityIndex, waterQuality, season, temperature, co2Level } = ecosystemData;
             
             const responses = {
                 "plant_shrubs": [
-                    `You plant native shrubs along the creek bank. ${season === 'spring' ? 'The spring rains will help them establish quickly.' : ''}`,
+                    `You plant native Tasmanian shrubs. ${season === 'spring' ? 'The spring rains will help them establish quickly.' : ''}`,
                     "Native shrubs take root, providing habitat for small animals and insects.",
                     "The newly planted shrubs help reduce erosion along the water's edge."
                 ],
@@ -320,34 +272,34 @@
                     "Careful observation reveals how species are interacting with the habitat."
                 ],
                 "explore": [
-                    `You follow the creek and discover new areas. ${biodiversityIndex > 40 ? 'The biodiversity seems richer here.' : ''}`,
+                    `You explore the area. ${biodiversityIndex > 40 ? 'The biodiversity seems richer here.' : ''}`,
                     "Exploring reveals connections between different parts of the ecosystem.",
                     "You find a area that would benefit from restoration efforts."
                 ],
                 "plant_trees": [
-                    "You plant willow trees along the bank. Their roots will stabilize the soil and provide shade.",
-                    "Tree planting creates future canopy cover, cooling the water for aquatic life.",
+                    "You plant native trees. Their roots will stabilize the soil and provide shade.",
+                    "Tree planting creates future canopy cover, cooling the area for wildlife.",
                     "New trees will eventually provide nesting sites for birds and habitat for insects."
                 ],
                 "build_habitat": [
                     "You construct brush piles for small mammals and reptiles to shelter in.",
-                    "Creating rock formations in the creek provides hiding places for fish and amphibians.",
+                    "Creating habitat structures provides hiding places for native wildlife.",
                     "Installing nest boxes attracts birds that help control insects."
                 ],
                 "test_water": [
-                    "You test the creek's pH and find it slightly acidic but within acceptable range.",
+                    "You test the water's pH and find it slightly acidic but within acceptable range.",
                     "Water testing reveals good oxygen levels but some sediment pollution.",
-                    "The water quality is improving but still shows signs of upstream agricultural runoff."
+                    "The water quality is improving but still shows signs of upstream impacts."
                 ],
                 "continue_exploring": [
-                    "You venture further and find an abandoned farm field that could be restored to prairie.",
-                    "Exploring reveals a hillside with erosion issues that need addressing.",
-                    "You discover a beautiful wildflower meadow that supports pollinators."
+                    "You venture further and find areas that could be restored.",
+                    "Exploring reveals issues that need addressing.",
+                    "You discover beautiful areas that support native species."
                 ],
                 "check_wetland": [
-                    "The wetland is thriving with cattails, frogs, and aquatic insects.",
-                    "You notice invasive phragmites are starting to take over part of the wetland.",
-                    "The wetland acts as a natural filter, improving water quality downstream."
+                    "The wetland is thriving with native plants and aquatic insects.",
+                    "You notice invasive species are starting to take over part of the wetland.",
+                    "The wetland acts as a natural filter, improving water quality."
                 ],
                 "educational_program": [
                     "You organize a community workshop on native plants. Attendance is good!",
@@ -378,6 +330,11 @@
                     "Your mitigation efforts help buffer the ecosystem from climate impacts.",
                     "Implementing climate-resilient practices strengthens the ecosystem's ability to adapt.",
                     "The habitat modifications provide refuge for species affected by changing conditions."
+                ],
+                "hire_npc": [
+                    "You recruit a specialist to join your team. Their expertise will be valuable.",
+                    "A new team member joins your conservation effort, bringing specialized skills.",
+                    "Adding expertise to your team improves your effectiveness."
                 ]
             };
 
@@ -391,12 +348,8 @@
             // Add climate context if relevant
             let response = possibleResponses[Math.floor(Math.random() * possibleResponses.length)];
             
-            if (temperature > 25 && choice.id.includes("plant")) {
-                response += " The heat makes this work challenging - these plants will need extra water to establish.";
-            }
-            
-            if (co2Level > 420 && choice.id.includes("plant")) {
-                response += " The elevated CO2 levels might actually accelerate plant growth in the short term.";
+            if (temperature > 20 && choice.id.includes("plant")) {
+                response += " The warm weather makes this work challenging - these plants will need extra water to establish.";
             }
             
             return response;
@@ -431,10 +384,10 @@
                     break;
                 case "observe_wildlife":
                     // Random chance to discover new wildlife based on biodiversity
-                    if (Math.random() < updatedData.biodiversityIndex / 100 && updatedData.wildlifeObserved.length < Object.keys(wildlifeDatabase).length) {
-                        const possibleNewSpecies = Object.keys(wildlifeDatabase).filter(
+                    if (Math.random() < updatedData.biodiversityIndex / 100 && updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
+                        const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
                             species => !updatedData.wildlifeObserved.includes(species) && 
-                            wildlifeDatabase[species].habitat === locationData.biome
+                            tasmaniaWildlife[species].habitat === locationData.biome
                         );
                         if (possibleNewSpecies.length > 0) {
                             const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
@@ -457,11 +410,11 @@
                     updatedData.ecosystemHealth += 1;
                     break;
                 case "check_wetland":
-                    if (!updatedData.locationsVisited.includes('wetland')) {
-                        updatedData.locationsVisited.push('wetland');
+                    if (!updatedData.locationsVisited.includes('macquarie_harbor')) {
+                        updatedData.locationsVisited.push('macquarie_harbor');
                     }
-                    if (!updatedData.wildlifeObserved.includes('waterfowl')) {
-                        updatedData.wildlifeObserved.push('waterfowl');
+                    if (!updatedData.wildlifeObserved.includes('platypus')) {
+                        updatedData.wildlifeObserved.push('platypus');
                     }
                     updatedData.ecosystemHealth += 4;
                     updatedData.waterQuality += 3;
@@ -507,9 +460,23 @@
                         updatedData.climateEvents[0].severity = "low";
                     }
                     break;
+                case "hire_npc":
+                    const npc = npcTeamMembers.find(m => m.id === choice.npcId);
+                    if (npc && !updatedData.npcTeam.some(m => m.id === choice.npcId)) {
+                        updatedData.npcTeam.push(npc);
+                        updatedData.budget -= choice.cost;
+                    }
+                    break;
                 default:
                     updatedData.ecosystemHealth += 1;
             }
+            
+            // NPC team effects
+            updatedData.npcTeam.forEach(npc => {
+                // Each NPC provides a bonus to certain actions
+                updatedData.ecosystemHealth += 0.5 * npc.efficiency;
+                updatedData.biodiversityIndex += 0.3 * npc.efficiency;
+            });
             
             // Update day and possibly season
             updatedData.day += choice.time || 1;
@@ -518,17 +485,17 @@
                 const currentSeasonIndex = seasons.indexOf(updatedData.season);
                 updatedData.season = seasons[(currentSeasonIndex + 1) % 4];
                 
-                // Seasonal effects
+                // Seasonal effects (adjusted for Tasmania's climate)
                 if (updatedData.season === 'spring') {
                     updatedData.ecosystemHealth += 5; // Spring growth
                     updatedData.rainfall += 10; // Spring rains
                 } else if (updatedData.season === 'summer') {
-                    updatedData.temperature += 3; // Summer heat
-                    updatedData.rainfall -= 15; // Summer drought
+                    updatedData.temperature += 2; // Summer heat (milder in Tasmania)
+                    updatedData.rainfall -= 5; // Summer is drier but not drought-like
                 } else if (updatedData.season === 'fall') {
                     updatedData.temperature -= 2; // Cooling temperatures
                 } else if (updatedData.season === 'winter') {
-                    updatedData.temperature -= 5; // Winter cold
+                    updatedData.temperature -= 3; // Winter cold
                     updatedData.rainfall += 5; // Winter rains
                 }
             }
@@ -540,7 +507,7 @@
                 
                 // More extreme weather patterns
                 if (Math.random() > 0.7) {
-                    updatedData.rainfall += (Math.random() > 0.5 ? 10 : -10);
+                    updatedData.rainfall += (Math.random() > 0.5 ? 5 : -5);
                 }
             }
             
@@ -588,7 +555,7 @@
             updatedData.ecosystemHealth = Math.min(Math.max(updatedData.ecosystemHealth, 0), 100);
             updatedData.biodiversityIndex = Math.min(Math.max(updatedData.biodiversityIndex, 0), 100);
             updatedData.waterQuality = Math.min(Math.max(updatedData.waterQuality, 0), 100);
-            updatedData.temperature = Math.min(Math.max(updatedData.temperature, -10), 45);
+            updatedData.temperature = Math.min(Math.max(updatedData.temperature, -5), 35); // Tasmania has milder temps
             updatedData.rainfall = Math.min(Math.max(updatedData.rainfall, 0), 200);
             
             // Add to historical data
@@ -601,37 +568,12 @@
                 co2Level: updatedData.co2Level
             });
             
-            // Update multiplayer data occasionally
-            if (Math.random() < 0.3) {
-                updatedData.multiplayerSession = simulateMultiplayerSession();
-                
-                // Add a chat message
-                if (updatedData.chatMessages.length < 20) {
-                    const players = ["EcoWarrior42", "GreenThumb99", "NatureLover23", "Conservationist7"];
-                    const messages = [
-                        "Just planted 20 native shrubs in the wetland!",
-                        "Has anyone noticed increased bird activity recently?",
-                        "The water quality tests are showing improvement!",
-                        "We need to address the erosion on the north bank.",
-                        "I'm organizing a volunteer day next weekend - who's in?",
-                        "The new policy is really helping with conservation efforts.",
-                        "Spotted a rare turtle species today! 🐢"
-                    ];
-                    
-                    updatedData.chatMessages.push({
-                        player: players[Math.floor(Math.random() * players.length)],
-                        message: messages[Math.floor(Math.random() * messages.length)],
-                        time: "Just now"
-                    });
-                }
-            }
-            
             return updatedData;
         };
 
         // More dynamic choice generation
         const getNextChoices = (ecosystemData, currentLocation) => {
-            const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents } = ecosystemData;
+            const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam } = ecosystemData;
             
             const baseChoices = [
                 { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
@@ -649,11 +591,11 @@
                 specialChoices.push({ id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 });
             }
             
-            if (locationsVisited.includes('downstream') && budget >= 100) {
+            if (locationsVisited.includes('cradle_mountain') && budget >= 100) {
                 specialChoices.push({ id: "plant_trees", text: "Plant trees", cost: 100, time: 2 });
             }
             
-            if (locationsVisited.includes('wetland')) {
+            if (locationsVisited.includes('macquarie_harbor')) {
                 specialChoices.push({ id: "check_wetland", text: "Monitor wetland health", cost: 0, time: 1 });
             }
             
@@ -695,6 +637,21 @@
                 }
             });
             
+            // NPC hiring options
+            if (ecosystemData.gameMode === 'team') {
+                npcTeamMembers.forEach(npc => {
+                    if (!npcTeam.some(m => m.id === npc.id) && budget >= npc.cost) {
+                        specialChoices.push({
+                            id: "hire_npc",
+                            text: `Hire: ${npc.name} (${npc.role})`,
+                            cost: npc.cost,
+                            time: 2,
+                            npcId: npc.id
+                        });
+                    }
+                });
+            }
+            
             // Climate mitigation options
             if (climateEvents.length > 0 && climateEvents[0].active && budget >= 200) {
                 specialChoices.push({ 
@@ -727,12 +684,20 @@
                     
                     // Initialize map if not already exists
                     if (!mapInstance.current) {
-                        mapInstance.current = L.map(mapRef.current).setView(location.coordinates, 13);
+                        mapInstance.current = L.map(mapRef.current).setView(location.coordinates, 10);
                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         }).addTo(mapInstance.current);
+                        
+                        // Add Tasmania outline
+                        L.polygon([
+                            [-40.68, 144.72],
+                            [-40.68, 148.25],
+                            [-43.63, 148.25],
+                            [-43.63, 144.72]
+                        ], {color: '#3388ff', weight: 2, fill: false}).addTo(mapInstance.current);
                     } else {
-                        mapInstance.current.setView(location.coordinates, 13);
+                        mapInstance.current.setView(location.coordinates, 10);
                     }
                     
                     // Remove existing marker if any
@@ -931,15 +896,31 @@
         // Main component
         function EcoQuest() {
             const [gameStarted, setGameStarted] = useState(false);
+            const [gameModeSelected, setGameModeSelected] = useState(false);
             const [gameCompleted, setGameCompleted] = useState(false);
             const [storyLog, setStoryLog] = useState(initialStoryLog);
             const [ecosystemData, setEcosystemData] = useState(initialEcosystemData);
             const [currentChoices, setCurrentChoices] = useState(initialChoices);
-            const [currentLocation, setCurrentLocation] = useState('degraded_riparian');
+            const [currentLocation, setCurrentLocation] = useState('tarkine_forest');
             const [showCharts, setShowCharts] = useState(false);
             const [showClimateChart, setShowClimateChart] = useState(false);
             const [weatherData, setWeatherData] = useState(null);
-            const [chatMessage, setChatMessage] = useState('');
+
+            // Function to fetch Tasmania weather data (simulated)
+            const fetchWeatherData = async (coordinates) => {
+                // Simulated Tasmania weather data
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        const baseTemp = 8 + (Math.random() * 12); // 8-20°C typical for Tasmania
+                        const rainfall = 30 + (Math.random() * 70); // 30-100mm common in Tasmania
+                        resolve({
+                            temperature: Math.round(baseTemp * 10) / 10,
+                            rainfall: Math.round(rainfall * 10) / 10,
+                            conditions: rainfall > 70 ? "rainy" : rainfall > 40 ? "cloudy" : "sunny"
+                        });
+                    }, 500);
+                });
+            };
 
             useEffect(() => {
                 // Fetch weather data when location changes
@@ -981,40 +962,23 @@
                 }
             };
 
-            const handleChatSubmit = (e) => {
-                e.preventDefault();
-                if (chatMessage.trim()) {
-                    const newMessage = {
-                        player: "You",
-                        message: chatMessage,
-                        time: "Just now"
-                    };
-                    
-                    setEcosystemData(prev => ({
-                        ...prev,
-                        chatMessages: [...prev.chatMessages, newMessage]
-                    }));
-                    
-                    setChatMessage('');
-                }
-            };
-
-            const startGame = () => {
-                setGameStarted(true);
-                // Initialize multiplayer session
+            const startGame = (mode) => {
                 setEcosystemData(prev => ({
                     ...prev,
-                    multiplayerSession: simulateMultiplayerSession()
+                    gameMode: mode
                 }));
+                setGameModeSelected(true);
+                setGameStarted(true);
             };
 
             const restartGame = () => {
                 setGameStarted(false);
+                setGameModeSelected(false);
                 setGameCompleted(false);
                 setStoryLog(initialStoryLog);
                 setEcosystemData(initialEcosystemData);
                 setCurrentChoices(initialChoices);
-                setCurrentLocation('degraded_riparian');
+                setCurrentLocation('tarkine_forest');
                 setWeatherData(null);
             };
 
@@ -1026,27 +990,87 @@
                 }
             }, [storyLog]);
 
-            // Auto-scroll to bottom of chat
-            const chatRef = useRef(null);
-            useEffect(() => {
-                if (chatRef.current) {
-                    chatRef.current.scrollTop = chatRef.current.scrollHeight;
-                }
-            }, [ecosystemData.chatMessages]);
-
             return (
                 <div className="min-h-screen p-4 md:p-6">
-                    {!gameStarted ? (
+                    {!gameModeSelected ? (
+                        // Game Mode Selection Page
+                        <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-10 text-center fade-in">
+                            <h1 className="text-4xl font-bold text-green-800 mb-4">🌱 EcoQuest: Tasmania</h1>
+                            <h2 className="text-2xl font-semibold text-green-700 mb-6">Choose Your Adventure Mode</h2>
+                            <p className="text-gray-600 mb-8 text-lg">
+                                Explore Northwest Tasmania's unique ecosystems and work to protect its endangered species.
+                            </p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                <div 
+                                    className="border-2 border-green-200 rounded-xl p-6 cursor-pointer hover:bg-green-50 transition-colors"
+                                    onClick={() => startGame('solo')}
+                                >
+                                    <div className="text-4xl mb-4">👤</div>
+                                    <h3 className="text-xl font-semibold text-green-700 mb-2">Solo Explorer</h3>
+                                    <p className="text-gray-600">Work alone to restore Tasmania's ecosystems at your own pace.</p>
+                                    <ul className="text-left text-gray-600 mt-4 space-y-2 text-sm">
+                                        <li className="flex items-start">
+                                            <span className="text-green-500 mr-2">•</span>
+                                            <span>More focused decision-making</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="text-green-500 mr-2">•</span>
+                                            <span>Complete control over strategies</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="text-green-500 mr-2">•</span>
+                                            <span>Slower progress but full autonomy</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div 
+                                    className="border-2 border-blue-200 rounded-xl p-6 cursor-pointer hover:bg-blue-50 transition-colors"
+                                    onClick={() => startGame('team')}
+                                >
+                                    <div className="text-4xl mb-4">👥</div>
+                                    <h3 className="text-xl font-semibold text-blue-700 mb-2">Team Leader</h3>
+                                    <p className="text-gray-600">Build a team of specialists to tackle complex conservation challenges.</p>
+                                    <ul className="text-left text-gray-600 mt-4 space-y-2 text-sm">
+                                        <li className="flex items-start">
+                                            <span className="text-blue-500 mr-2">•</span>
+                                            <span>Hire NPC specialists with unique skills</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="text-blue-500 mr-2">•</span>
+                                            <span>Faster progress with team bonuses</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="text-blue-500 mr-2">•</span>
+                                            <span>More complex management required</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-medium text-green-700 mb-3">Northwest Tasmania Regions</h3>
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    {Object.values(locations).map((location, idx) => (
+                                        <span key={idx} className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
+                                            {location.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    ) : !gameStarted ? (
                         // Landing Page
                         <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 mt-10 text-center fade-in">
-                            <h1 className="text-4xl font-bold text-green-800 mb-4">🌱 EcoQuest</h1>
+                            <h1 className="text-4xl font-bold text-green-800 mb-4">🌱 EcoQuest: Tasmania</h1>
                             <h2 className="text-2xl font-semibold text-green-700 mb-6">Interactive Ecosystem Management</h2>
                             <p className="text-gray-600 mb-8 text-lg">
-                                Embark on an interactive conservation adventure where your choices shape the ecosystem. 
-                                Restore balance to a degraded landscape and witness how your actions impact wildlife and habitat health.
+                                Embark on an interactive conservation adventure where your choices shape Tasmania's unique ecosystems. 
+                                Restore balance to threatened landscapes and protect endangered species.
                             </p>
                             <button 
-                                onClick={startGame}
+                                onClick={() => setGameStarted(true)}
                                 className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg transition duration-300 transform hover:scale-105 btn-hover pulse-animation"
                             >
                                 Start Adventure
@@ -1057,7 +1081,7 @@
                                 <ul className="text-left text-gray-600 space-y-2 max-w-md mx-auto">
                                     <li className="flex items-start">
                                         <span className="text-green-500 mr-2">•</span>
-                                        <span>Make strategic choices to restore the ecosystem</span>
+                                        <span>Make strategic choices to restore ecosystems</span>
                                     </li>
                                     <li className="flex items-start">
                                         <span className="text-green-500 mr-2">•</span>
@@ -1069,19 +1093,11 @@
                                     </li>
                                     <li className="flex items-start">
                                         <span className="text-green-500 mr-2">•</span>
-                                        <span>Discover new locations and wildlife species</span>
+                                        <span>Discover Tasmania's unique locations and wildlife</span>
                                     </li>
                                     <li className="flex items-start">
                                         <span className="text-green-500 mr-2">•</span>
-                                        <span>Engage the community to support your efforts</span>
-                                    </li>
-                                    <li className="flex items-start">
-                                        <span className="text-green-500 mr-2">•</span>
-                                        <span>Collaborate with other players in multiplayer mode</span>
-                                    </li>
-                                    <li className="flex items-start">
-                                        <span className="text-green-500 mr-2">•</span>
-                                        <span>Respond to climate change events and policies</span>
+                                        <span>{ecosystemData.gameMode === 'team' ? 'Build and manage your conservation team' : 'Work solo to restore ecosystems'}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -1120,7 +1136,7 @@
                                     </div>
                                     <div>
                                         <p className="font-medium">Temperature Change</p>
-                                        <p>+{(ecosystemData.temperature - 20).toFixed(1)}°C</p>
+                                        <p>+{(ecosystemData.temperature - 12).toFixed(1)}°C</p>
                                     </div>
                                     <div>
                                         <p className="font-medium">CO2 Level</p>
@@ -1168,9 +1184,14 @@
                         // Game Interface
                         <div className="max-w-7xl mx-auto fade-in">
                             <header className="flex justify-between items-center mb-6">
-                                <h1 className="text-3xl font-bold text-green-800 flex items-center">
-                                    <span className="mr-2">🌿</span> EcoQuest
-                                </h1>
+                                <div>
+                                    <h1 className="text-3xl font-bold text-green-800 flex items-center">
+                                        <span className="mr-2">🌿</span> EcoQuest: Tasmania
+                                    </h1>
+                                    <p className="text-green-600">
+                                        {ecosystemData.gameMode === 'solo' ? 'Solo Explorer' : 'Team Leader'} Mode
+                                    </p>
+                                </div>
                                 <div className="flex items-center space-x-4">
                                     <div className="bg-white rounded-lg py-1 px-3 shadow-sm">
                                         <span className="text-green-700 font-medium">Day {ecosystemData.day}</span>
@@ -1337,7 +1358,7 @@
                                         <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
                                             <div 
                                                 className="bg-red-500 h-4 rounded-full transition-all duration-500 health-bar" 
-                                                style={{ width: `${((ecosystemData.temperature + 10) / 55) * 100}%` }}
+                                                style={{ width: `${((ecosystemData.temperature + 5) / 40) * 100}%` }}
                                             ></div>
                                         </div>
                                         
@@ -1410,10 +1431,8 @@
                                                 {ecosystemData.wildlifeObserved.length > 0 ? (
                                                     ecosystemData.wildlifeObserved.map((animal, idx) => (
                                                         <span key={idx} className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full wildlife-item flex items-center">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-                                                            </svg>
-                                                            {wildlifeDatabase[animal]?.name || animal}
+                                                            <span className="mr-1">{tasmaniaWildlife[animal]?.image || '🐾'}</span>
+                                                            {tasmaniaWildlife[animal]?.name || animal}
                                                         </span>
                                                     ))
                                                 ) : (
@@ -1441,102 +1460,37 @@
                                             </div>
                                         </div>
                                         
-                                        <div>
-                                            <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                                </svg>
-                                                Policies Enacted
-                                            </h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                {ecosystemData.policiesEnacted.length > 0 ? (
-                                                    ecosystemData.policiesEnacted.map((policyId, idx) => {
-                                                        const policy = policyOptions.find(p => p.id === policyId);
-                                                        return policy ? (
-                                                            <span key={idx} className="bg-purple-100 text-purple-800 text-sm px-3 py-1 rounded-full flex items-center">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                </svg>
-                                                                {policy.name}
-                                                            </span>
-                                                        ) : null;
-                                                    })
-                                                ) : (
-                                                    <p className="text-gray-500">No policies enacted yet</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Multiplayer Panel */}
-                                <div className="bg-white rounded-xl shadow-md p-6">
-                                    <h2 className="text-xl font-semibold text-green-700 mb-4 flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-                                        </svg>
-                                        Multiplayer Collaboration
-                                    </h2>
-                                    
-                                    {ecosystemData.multiplayerSession ? (
-                                        <>
-                                            <div className="mb-4">
-                                                <h3 className="font-medium text-green-700 mb-2">Active Players</h3>
-                                                <div className="space-y-2">
-                                                    {ecosystemData.multiplayerSession.players.map((player, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center">
-                                                            <span className={`flex items-center ${player.active ? 'text-green-600' : 'text-gray-400'}`}>
-                                                                <span className={`h-2 w-2 rounded-full mr-2 ${player.active ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                                                                {player.name}
-                                                            </span>
-                                                            <span className="text-sm font-semibold">{player.score} pts</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="mb-4">
-                                                <h3 className="font-medium text-green-700 mb-2">Recent Actions</h3>
-                                                <div className="space-y-2 text-sm">
-                                                    {ecosystemData.multiplayerSession.recentActions.map((action, idx) => (
-                                                        <div key={idx} className="bg-gray-50 p-2 rounded">
-                                                            <span className="font-medium text-green-600">{action.player}</span> {action.action}
-                                                            <div className="text-xs text-gray-500">{action.time}</div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            
+                                        {ecosystemData.gameMode === 'team' && (
                                             <div>
-                                                <h3 className="font-medium text-green-700 mb-2">Chat</h3>
-                                                <div ref={chatRef} className="multiplayer-chat mb-2 p-2 bg-gray-50 rounded border border-gray-200 h-32">
-                                                    {ecosystemData.chatMessages.map((msg, idx) => (
-                                                        <div key={idx} className="mb-1">
-                                                            <span className="font-medium text-green-600">{msg.player}:</span> {msg.message}
-                                                            <div className="text-xs text-gray-500">{msg.time}</div>
-                                                        </div>
-                                                    ))}
+                                                <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                                                    </svg>
+                                                    Your Team
+                                                </h3>
+                                                <div className="space-y-2">
+                                                    {ecosystemData.npcTeam.length > 0 ? (
+                                                        ecosystemData.npcTeam.map((npc, idx) => (
+                                                            <div key={idx} className="flex items-center justify-between bg-green-50 p-2 rounded">
+                                                                <div className="flex items-center">
+                                                                    <span className="text-2xl mr-2">{npc.portrait}</span>
+                                                                    <div>
+                                                                        <div className="font-medium">{npc.name}</div>
+                                                                        <div className="text-sm text-gray-600">{npc.role}</div>
+                                                                    </div>
+                                                                </div>
+                                                                <span className="text-sm bg-green-200 text-green-800 px-2 py-1 rounded-full">
+                                                                    +{npc.efficiency}x efficiency
+                                                                </span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-gray-500">No team members yet. Hire specialists to help your efforts.</p>
+                                                    )}
                                                 </div>
-                                                <form onSubmit={handleChatSubmit} className="flex">
-                                                    <input 
-                                                        type="text" 
-                                                        value={chatMessage}
-                                                        onChange={(e) => setChatMessage(e.target.value)}
-                                                        placeholder="Type a message..." 
-                                                        className="flex-1 border border-gray-300 rounded-l-lg px-3 py-1 text-sm"
-                                                    />
-                                                    <button 
-                                                        type="submit"
-                                                        className="bg-green-500 text-white px-3 py-1 rounded-r-lg text-sm"
-                                                    >
-                                                        Send
-                                                    </button>
-                                                </form>
                                             </div>
-                                        </>
-                                    ) : (
-                                        <p className="text-gray-500">Connecting to multiplayer server...</p>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
