@@ -111,6 +111,22 @@
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23e0f2e9" opacity="0.3"/><path d="M20,30 Q40,20 60,30 T100,40 L90,70 Q70,90 40,80 T10,60 Z" fill="%23a8e6cf" opacity="0.5"/></svg>');
             background-size: cover;
         }
+        .water-quality-action {
+            background-color: #e0f2f7 !important;
+            border: 1px solid #a8d5e5 !important;
+        }
+        .tree-planting-action {
+            background-color: #e0f7e0 !important;
+            border: 1px solid #a8e6cf !important;
+        }
+        .fundraising-action {
+            background-color: #f0e8ff !important;
+            border: 1px solid #c4b5fd !important;
+        }
+        .location-unlocked {
+            animation: pulse 2s infinite;
+            border: 2px solid #10b981 !important;
+        }
     </style>
 </head>
 <body class="seasonal-bg tasmania-bg min-h-screen">
@@ -144,21 +160,23 @@
             carbonSequestration: 0,
             waterQuality: 40,
             locationsVisited: ['tarkine_forest'],
+            currentLocation: 'tarkine_forest',
             season: 'spring',
             day: 1,
-            budget: 1000,
+            budget: 1500,
             reputation: 50,
             educationLevel: 0,
             volunteers: 0,
             historicalData: [{day: 1, health: 50, biodiversity: 30, waterQuality: 40}],
-            temperature: 12, // Tasmania is cooler
-            rainfall: 80, // Tasmania has higher rainfall
-            co2Level: 410, // ppm
+            temperature: 12,
+            rainfall: 80,
+            co2Level: 410,
             policiesEnacted: [],
             climateEvents: [],
-            gameMode: 'solo', // 'solo' or 'team'
+            gameMode: 'solo',
             npcTeam: [],
-            chatMessages: []
+            chatMessages: [],
+            unlockedProjects: {}
         };
 
         // Expanded story elements with Tasmania focus
@@ -172,10 +190,10 @@
             { id: "plant_shrubs", text: "Plant native shrubs", cost: 50, time: 1 },
             { id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 },
             { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
-            { id: "explore", text: "Explore nearby areas", cost: 0, time: 1 }
+            { id: "explore", text: "Explore nearby areas", cost: 0, time: 1, className: "bg-blue-100 border-blue-300" }
         ];
 
-        // Tasmania-specific locations
+        // Tasmania-specific locations with projects
         const locations = {
             tarkine_forest: {
                 name: "Tarkine Rainforest",
@@ -183,8 +201,13 @@
                 restorationPotential: "Very High",
                 keySpecies: ["tassie_devil", "quoll", "platypus", "blue_gum"],
                 threats: ["logging", "climate change", "invasive species"],
-                coordinates: [-41.2, 145.0], // Tarkine region
-                biome: "temperate_rainforest"
+                coordinates: [-41.2, 145.0],
+                biome: "temperate_rainforest",
+                projects: [
+                    { id: "plant_trees_tarkine", name: "Reforestation Program", cost: 150, effect: "Plant native trees to restore canopy cover", healthImpact: 10, biodiversityImpact: 8, waterImpact: 3 },
+                    { id: "devil_tracking", name: "Devil Tracking Program", cost: 200, effect: "Monitor Tasmanian devil populations", healthImpact: 5, biodiversityImpact: 10 },
+                    { id: "water_monitoring", name: "Water Quality Monitoring", cost: 100, effect: "Establish water quality monitoring stations", healthImpact: 3, waterImpact: 8 }
+                ]
             },
             cradle_mountain: {
                 name: "Cradle Mountain-Lake St Clair",
@@ -192,8 +215,13 @@
                 restorationPotential: "High",
                 keySpecies: ["wombat", "pademelon", "wedge_eagle", "black_currawong"],
                 threats: ["climate change", "tourist impact", "feral animals"],
-                coordinates: [-41.65, 145.95], // Cradle Mountain
-                biome: "alpine"
+                coordinates: [-41.65, 145.95],
+                biome: "alpine",
+                projects: [
+                    { id: "alpine_restoration", name: "Alpine Vegetation Restoration", cost: 180, effect: "Restore fragile alpine plant communities", healthImpact: 12, biodiversityImpact: 10 },
+                    { id: "visitor_education", name: "Visitor Education Program", cost: 120, effect: "Educate tourists about conservation", healthImpact: 6, reputationImpact: 8 },
+                    { id: "feral_control", name: "Feral Animal Control", cost: 250, effect: "Control feral cats and foxes", healthImpact: 8, biodiversityImpact: 12 }
+                ]
             },
             freycinet: {
                 name: "Freycinet Peninsula",
@@ -201,8 +229,13 @@
                 restorationPotential: "Medium",
                 keySpecies: ["rosella", "wedge_eagle", "freshwater_lobster"],
                 threats: ["coastal erosion", "tourist impact", "development"],
-                coordinates: [-42.13, 148.3], // Freycinet
-                biome: "coastal"
+                coordinates: [-42.13, 148.3],
+                biome: "coastal",
+                projects: [
+                    { id: "coastal_rehab", name: "Coastal Rehabilitation", cost: 170, effect: "Stabilize dunes and restore coastal vegetation", healthImpact: 10, biodiversityImpact: 7, waterImpact: 5 },
+                    { id: "bird_monitoring", name: "Shorebird Monitoring", cost: 130, effect: "Monitor migratory shorebird populations", healthImpact: 4, biodiversityImpact: 9 },
+                    { id: "marine_debris", name: "Marine Debris Cleanup", cost: 90, effect: "Remove plastic and debris from beaches", healthImpact: 6, waterImpact: 8 }
+                ]
             },
             maria_island: {
                 name: "Maria Island",
@@ -210,8 +243,13 @@
                 restorationPotential: "High",
                 keySpecies: ["tassie_devil", "wombat", "pademelon", "rosella"],
                 threats: ["invasive species", "erosion", "climate change"],
-                coordinates: [-42.63, 148.0], // Maria Island
-                biome: "island"
+                coordinates: [-42.63, 148.0],
+                biome: "island",
+                projects: [
+                    { id: "species_reintroduction", name: "Species Reintroduction", cost: 300, effect: "Reintroduce native species to the island", healthImpact: 15, biodiversityImpact: 20 },
+                    { id: "erosion_control", name: "Erosion Control", cost: 160, effect: "Stabilize soil and prevent erosion", healthImpact: 10, waterImpact: 7 },
+                    { id: "invasive_removal", name: "Invasive Species Removal", cost: 190, effect: "Remove invasive plants and animals", healthImpact: 12, biodiversityImpact: 15 }
+                ]
             },
             macquarie_harbor: {
                 name: "Macquarie Harbor",
@@ -219,8 +257,13 @@
                 restorationPotential: "Medium",
                 keySpecies: ["platypus", "freshwater_lobster", "black_currawong"],
                 threats: ["aquaculture", "pollution", "water quality"],
-                coordinates: [-42.3, 145.3], // Macquarie Harbor
-                biome: "wetland"
+                coordinates: [-42.3, 145.3],
+                biome: "wetland",
+                projects: [
+                    { id: "wetland_restoration", name: "Wetland Restoration", cost: 220, effect: "Restore degraded wetland areas", healthImpact: 12, waterImpact: 15, biodiversityImpact: 10 },
+                    { id: "water_quality", name: "Water Quality Improvement", cost: 180, effect: "Improve water quality through filtration", healthImpact: 8, waterImpact: 18 },
+                    { id: "lobster_conservation", name: "Freshwater Lobster Conservation", cost: 150, effect: "Protect endangered lobster habitat", healthImpact: 7, biodiversityImpact: 12 }
+                ]
             }
         };
 
@@ -335,6 +378,26 @@
                     "You recruit a specialist to join your team. Their expertise will be valuable.",
                     "A new team member joins your conservation effort, bringing specialized skills.",
                     "Adding expertise to your team improves your effectiveness."
+                ],
+                "clean_waterways": [
+                    "You organize a community cleanup of local waterways, removing debris and pollutants.",
+                    "Cleaning up the waterways improves habitat for aquatic species.",
+                    "The water looks clearer after your cleanup efforts."
+                ],
+                "install_filtration": [
+                    "You install natural filtration systems to improve water quality.",
+                    "The new filtration systems help remove pollutants from runoff water.",
+                    "Natural filtration improves water quality without chemical treatments."
+                ],
+                "plant_riparian": [
+                    "You plant native vegetation along riverbanks to prevent erosion.",
+                    "Riparian planting stabilizes banks and filters runoff before it enters waterways.",
+                    "The new vegetation provides shade, cooling the water for aquatic life."
+                ],
+                "run_project": [
+                    "You implement a conservation project in the area.",
+                    "The project makes measurable improvements to the ecosystem.",
+                    "Your conservation efforts are showing positive results."
                 ]
             };
 
@@ -350,6 +413,13 @@
             
             if (temperature > 20 && choice.id.includes("plant")) {
                 response += " The warm weather makes this work challenging - these plants will need extra water to establish.";
+            }
+            
+            if (choice.id === "run_project" && choice.projectId) {
+                const project = locations[location]?.projects.find(p => p.id === choice.projectId);
+                if (project) {
+                    response = `You implement the ${project.name} project. ${project.effect}`;
+                }
             }
             
             return response;
@@ -374,12 +444,14 @@
                     updatedData.ecosystemHealth += 8;
                     updatedData.biodiversityIndex += 5;
                     updatedData.carbonSequestration += 5;
+                    updatedData.waterQuality += 2;
                     updatedData.budget -= choice.cost;
                     break;
                 case "remove_weeds":
                     updatedData.invasiveSpeciesRemoved += 1;
                     updatedData.ecosystemHealth += 3;
                     updatedData.biodiversityIndex += 2;
+                    updatedData.waterQuality += 1;
                     updatedData.budget -= choice.cost;
                     break;
                 case "observe_wildlife":
@@ -402,10 +474,15 @@
                     const unexploredLocations = Object.keys(locations).filter(
                         loc => !updatedData.locationsVisited.includes(loc)
                     );
-                    if (unexploredLocations.length > 0 && Math.random() > 0.7) {
+                    if (unexploredLocations.length > 0 && Math.random() > 0.5) {
                         const newLocation = unexploredLocations[Math.floor(Math.random() * unexploredLocations.length)];
                         updatedData.locationsVisited.push(newLocation);
                         updatedData.currentLocation = newLocation;
+                        
+                        // Unlock all projects for this location
+                        if (!updatedData.unlockedProjects[newLocation]) {
+                            updatedData.unlockedProjects[newLocation] = locations[newLocation].projects.map(p => p.id);
+                        }
                     }
                     updatedData.ecosystemHealth += 1;
                     break;
@@ -417,7 +494,7 @@
                         updatedData.wildlifeObserved.push('platypus');
                     }
                     updatedData.ecosystemHealth += 4;
-                    updatedData.waterQuality += 3;
+                    updatedData.waterQuality += 5;
                     break;
                 case "educational_program":
                     updatedData.educationLevel += 10;
@@ -425,16 +502,18 @@
                     updatedData.budget -= choice.cost;
                     break;
                 case "fundraiser":
-                    updatedData.budget += 200 + Math.floor(Math.random() * 300);
-                    updatedData.reputation += 3;
+                    // More effective fundraising based on reputation
+                    const fundraisingAmount = 300 + Math.floor(Math.random() * 400) + (updatedData.reputation * 2);
+                    updatedData.budget += fundraisingAmount;
+                    updatedData.reputation += 5;
                     break;
                 case "recruit_volunteers":
-                    updatedData.volunteers += 2 + Math.floor(Math.random() * 4);
+                    updatedData.volunteers += 3 + Math.floor(Math.random() * 5);
                     updatedData.reputation += 4;
                     updatedData.budget -= choice.cost;
                     break;
                 case "research_grants":
-                    updatedData.budget += 1000 + Math.floor(Math.random() * 1500);
+                    updatedData.budget += 1500 + Math.floor(Math.random() * 2000);
                     updatedData.reputation += 8;
                     break;
                 case "enact_policy":
@@ -467,6 +546,37 @@
                         updatedData.budget -= choice.cost;
                     }
                     break;
+                case "clean_waterways":
+                    updatedData.waterQuality += 8;
+                    updatedData.ecosystemHealth += 4;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "install_filtration":
+                    updatedData.waterQuality += 10;
+                    updatedData.ecosystemHealth += 5;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "plant_riparian":
+                    updatedData.waterQuality += 12;
+                    updatedData.ecosystemHealth += 6;
+                    updatedData.biodiversityIndex += 4;
+                    updatedData.budget -= choice.cost;
+                    break;
+                case "run_project":
+                    const project = locationData.projects.find(p => p.id === choice.projectId);
+                    if (project) {
+                        updatedData.ecosystemHealth += project.healthImpact || 0;
+                        updatedData.biodiversityIndex += project.biodiversityImpact || 0;
+                        updatedData.waterQuality += project.waterImpact || 0;
+                        updatedData.budget -= project.cost;
+                        
+                        // Mark project as completed
+                        if (!updatedData.unlockedProjects[currentLocation]) {
+                            updatedData.unlockedProjects[currentLocation] = [];
+                        }
+                        updatedData.unlockedProjects[currentLocation] = updatedData.unlockedProjects[currentLocation].filter(id => id !== project.id);
+                    }
+                    break;
                 default:
                     updatedData.ecosystemHealth += 1;
             }
@@ -476,7 +586,28 @@
                 // Each NPC provides a bonus to certain actions
                 updatedData.ecosystemHealth += 0.5 * npc.efficiency;
                 updatedData.biodiversityIndex += 0.3 * npc.efficiency;
+                updatedData.waterQuality += 0.2 * npc.efficiency;
             });
+            
+            // Natural water quality recovery (if no negative events)
+            if (updatedData.climateEvents.length === 0 || !updatedData.climateEvents[0].active) {
+                if (updatedData.waterQuality < 70) {
+                    updatedData.waterQuality += 1;
+                }
+            }
+            
+            // Volunteer effects - volunteers help with fundraising
+            if (updatedData.volunteers > 0) {
+                // Volunteers improve various metrics
+                updatedData.ecosystemHealth += Math.floor(updatedData.volunteers / 5);
+                updatedData.waterQuality += Math.floor(updatedData.volunteers / 10);
+                
+                // Volunteers enable passive fundraising
+                if (updatedData.day % 5 === 0) {
+                    const volunteerFundraising = Math.floor(updatedData.volunteers * 2.5);
+                    updatedData.budget += volunteerFundraising;
+                }
+            }
             
             // Update day and possibly season
             updatedData.day += choice.time || 1;
@@ -487,23 +618,27 @@
                 
                 // Seasonal effects (adjusted for Tasmania's climate)
                 if (updatedData.season === 'spring') {
-                    updatedData.ecosystemHealth += 5; // Spring growth
-                    updatedData.rainfall += 10; // Spring rains
+                    updatedData.ecosystemHealth += 5;
+                    updatedData.rainfall += 10;
+                    updatedData.waterQuality += 3;
                 } else if (updatedData.season === 'summer') {
-                    updatedData.temperature += 2; // Summer heat (milder in Tasmania)
-                    updatedData.rainfall -= 5; // Summer is drier but not drought-like
+                    updatedData.temperature += 2;
+                    updatedData.rainfall -= 5;
+                    updatedData.waterQuality -= 2;
                 } else if (updatedData.season === 'fall') {
-                    updatedData.temperature -= 2; // Cooling temperatures
+                    updatedData.temperature -= 2;
+                    updatedData.waterQuality += 1;
                 } else if (updatedData.season === 'winter') {
-                    updatedData.temperature -= 3; // Winter cold
-                    updatedData.rainfall += 5; // Winter rains
+                    updatedData.temperature -= 3;
+                    updatedData.rainfall += 5;
+                    updatedData.waterQuality += 2;
                 }
             }
             
             // Climate change effects - gradual changes over time
             if (updatedData.day % 10 === 0) {
-                updatedData.temperature += 0.1; // Gradual warming
-                updatedData.co2Level += 0.5; // Increasing CO2
+                updatedData.temperature += 0.1;
+                updatedData.co2Level += 0.5;
                 
                 // More extreme weather patterns
                 if (Math.random() > 0.7) {
@@ -511,8 +646,8 @@
                 }
             }
             
-            // Random climate events
-            if (Math.random() < 0.15 && updatedData.day > 10) {
+            // Random climate events (less frequent)
+            if (Math.random() < 0.1 && updatedData.day > 10) {
                 const event = {...climateEvents[Math.floor(Math.random() * climateEvents.length)]};
                 updatedData.climateEvents.unshift({
                     ...event,
@@ -530,16 +665,11 @@
             
             // Natural processes - ecosystem changes over time
             if (updatedData.ecosystemHealth > 70) {
-                updatedData.biodiversityIndex += 1; // Healthy ecosystems become more diverse
+                updatedData.biodiversityIndex += 1;
             }
             
             if (updatedData.waterQuality < 50 && updatedData.day % 5 === 0) {
-                updatedData.ecosystemHealth -= 1; // Poor water quality has ongoing effects
-            }
-            
-            // Volunteer effects
-            if (updatedData.volunteers > 0) {
-                updatedData.ecosystemHealth += Math.floor(updatedData.volunteers / 5);
+                updatedData.ecosystemHealth -= 1;
             }
             
             // Policy effects
@@ -555,7 +685,7 @@
             updatedData.ecosystemHealth = Math.min(Math.max(updatedData.ecosystemHealth, 0), 100);
             updatedData.biodiversityIndex = Math.min(Math.max(updatedData.biodiversityIndex, 0), 100);
             updatedData.waterQuality = Math.min(Math.max(updatedData.waterQuality, 0), 100);
-            updatedData.temperature = Math.min(Math.max(updatedData.temperature, -5), 35); // Tasmania has milder temps
+            updatedData.temperature = Math.min(Math.max(updatedData.temperature, -5), 35);
             updatedData.rainfall = Math.min(Math.max(updatedData.rainfall, 0), 200);
             
             // Add to historical data
@@ -573,11 +703,11 @@
 
         // More dynamic choice generation
         const getNextChoices = (ecosystemData, currentLocation) => {
-            const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam } = ecosystemData;
+            const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam, unlockedProjects } = ecosystemData;
             
             const baseChoices = [
                 { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
-                { id: "explore", text: "Explore new areas", cost: 0, time: 1 }
+                { id: "explore", text: "Explore new areas", cost: 0, time: 1, className: "bg-blue-100 border-blue-300" }
             ];
             
             const specialChoices = [];
@@ -591,12 +721,13 @@
                 specialChoices.push({ id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 });
             }
             
-            if (locationsVisited.includes('cradle_mountain') && budget >= 100) {
-                specialChoices.push({ id: "plant_trees", text: "Plant trees", cost: 100, time: 2 });
+            // Tree planting is now available earlier
+            if (budget >= 100) {
+                specialChoices.push({ id: "plant_trees", text: "Plant native trees", cost: 100, time: 2, className: "tree-planting-action" });
             }
             
             if (locationsVisited.includes('macquarie_harbor')) {
-                specialChoices.push({ id: "check_wetland", text: "Monitor wetland health", cost: 0, time: 1 });
+                specialChoices.push({ id: "check_wetland", text: "Monitor wetland health", cost: 0, time: 1, className: "water-quality-action" });
             }
             
             if (ecosystemHealth > 70 && budget >= 150) {
@@ -604,29 +735,58 @@
             }
             
             if (ecosystemHealth > 60 && budget >= 80) {
-                specialChoices.push({ id: "test_water", text: "Conduct water quality tests", cost: 80, time: 1 });
+                specialChoices.push({ id: "test_water", text: "Conduct water quality tests", cost: 80, time: 1, className: "water-quality-action" });
+            }
+            
+            // Water quality improvement actions
+            if (budget >= 120) {
+                specialChoices.push({ id: "clean_waterways", text: "Clean up waterways", cost: 120, time: 2, className: "water-quality-action" });
+            }
+            
+            if (budget >= 200) {
+                specialChoices.push({ id: "install_filtration", text: "Install natural filtration", cost: 200, time: 3, className: "water-quality-action" });
+            }
+            
+            if (budget >= 150) {
+                specialChoices.push({ id: "plant_riparian", text: "Plant riparian vegetation", cost: 150, time: 2, className: "water-quality-action tree-planting-action" });
+            }
+            
+            // Location-specific projects
+            if (unlockedProjects[currentLocation] && unlockedProjects[currentLocation].length > 0) {
+                locations[currentLocation].projects.forEach(project => {
+                    if (unlockedProjects[currentLocation].includes(project.id) && budget >= project.cost) {
+                        specialChoices.push({
+                            id: "run_project",
+                            text: `Project: ${project.name}`,
+                            cost: project.cost,
+                            time: 2,
+                            projectId: project.id,
+                            className: "location-unlocked"
+                        });
+                    }
+                });
             }
             
             // Community engagement actions
-            if (reputation >= 30 && budget >= 100) {
-                specialChoices.push({ id: "educational_program", text: "Run educational program", cost: 100, time: 2 });
+            if (reputation >= 20 && budget >= 80) {
+                specialChoices.push({ id: "educational_program", text: "Run educational program", cost: 80, time: 2 });
             }
             
-            if (reputation >= 20) {
-                specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 50, time: 2 });
+            if (reputation >= 15) {
+                specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 30, time: 2, className: "fundraising-action" });
             }
             
-            if (reputation >= 40) {
-                specialChoices.push({ id: "recruit_volunteers", text: "Recruit volunteers", cost: 30, time: 1 });
+            if (reputation >= 25) {
+                specialChoices.push({ id: "recruit_volunteers", text: "Recruit volunteers", cost: 20, time: 1 });
             }
             
-            if (educationLevel >= 50 && reputation >= 60) {
-                specialChoices.push({ id: "research_grants", text: "Apply for research grants", cost: 100, time: 3 });
+            if (educationLevel >= 30 && reputation >= 40) {
+                specialChoices.push({ id: "research_grants", text: "Apply for research grants", cost: 80, time: 3 });
             }
             
             // Policy options (only show if not already enacted)
             policyOptions.forEach(policy => {
-                if (!policiesEnacted.includes(policy.id) && budget >= Math.abs(policy.cost) && reputation >= 40) {
+                if (!policiesEnacted.includes(policy.id) && budget >= Math.abs(policy.cost) && reputation >= 30) {
                     specialChoices.push({ 
                         id: "enact_policy", 
                         text: `Enact: ${policy.name}`, 
@@ -653,11 +813,11 @@
             }
             
             // Climate mitigation options
-            if (climateEvents.length > 0 && climateEvents[0].active && budget >= 200) {
+            if (climateEvents.length > 0 && climateEvents[0].active && budget >= 150) {
                 specialChoices.push({ 
                     id: "climate_mitigation", 
                     text: `Mitigate: ${climateEvents[0].name}`, 
-                    cost: 200, 
+                    cost: 150, 
                     time: 2 
                 });
             }
@@ -673,18 +833,16 @@
         };
 
         // Map component for location visualization
-        const LocationMap = ({ locationKey }) => {
+        const LocationMap = ({ locationKey, onLocationChange }) => {
             const mapRef = useRef(null);
             const mapInstance = useRef(null);
-            const markerRef = useRef(null);
+            const markersRef = useRef({});
             
             useEffect(() => {
-                if (mapRef.current && locations[locationKey]) {
-                    const location = locations[locationKey];
-                    
+                if (mapRef.current) {
                     // Initialize map if not already exists
                     if (!mapInstance.current) {
-                        mapInstance.current = L.map(mapRef.current).setView(location.coordinates, 10);
+                        mapInstance.current = L.map(mapRef.current).setView([-42.5, 146.5], 7);
                         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         }).addTo(mapInstance.current);
@@ -696,29 +854,44 @@
                             [-43.63, 148.25],
                             [-43.63, 144.72]
                         ], {color: '#3388ff', weight: 2, fill: false}).addTo(mapInstance.current);
-                    } else {
-                        mapInstance.current.setView(location.coordinates, 10);
                     }
                     
-                    // Remove existing marker if any
-                    if (markerRef.current) {
-                        mapInstance.current.removeLayer(markerRef.current);
-                    }
+                    // Clear existing markers
+                    Object.values(markersRef.current).forEach(marker => {
+                        mapInstance.current.removeLayer(marker);
+                    });
+                    markersRef.current = {};
                     
-                    // Add new marker
-                    markerRef.current = L.marker(location.coordinates)
-                        .addTo(mapInstance.current)
-                        .bindPopup(`<b>${location.name}</b><br>${location.description}`)
-                        .openPopup();
+                    // Add markers for all locations
+                    Object.entries(locations).forEach(([key, location]) => {
+                        const marker = L.marker(location.coordinates)
+                            .addTo(mapInstance.current)
+                            .bindPopup(`<b>${location.name}</b><br>${location.description}`);
+                        
+                        markersRef.current[key] = marker;
+                        
+                        // Make marker clickable to change location
+                        marker.on('click', () => {
+                            if (onLocationChange) {
+                                onLocationChange(key);
+                            }
+                        });
+                    });
+                    
+                    // Highlight current location
+                    if (locationKey && markersRef.current[locationKey]) {
+                        markersRef.current[locationKey].openPopup();
+                    }
                 }
                 
                 return () => {
+                    // Clean up map instance when component unmounts
                     if (mapInstance.current) {
                         mapInstance.current.remove();
                         mapInstance.current = null;
                     }
                 };
-            }, [locationKey]);
+            }, [locationKey, onLocationChange]);
             
             return <div id="map" ref={mapRef} />;
         };
@@ -729,7 +902,7 @@
             const chartInstance = useRef(null);
             
             useEffect(() => {
-                if (chartRef.current) {
+                if (chartRef.current && data && data.length > 0) {
                     const ctx = chartRef.current.getContext('2d');
                     
                     // Destroy previous chart if it exists
@@ -804,11 +977,16 @@
                             }
                         }
                     });
+                } else if (chartRef.current) {
+                    // Clear canvas if no data
+                    const ctx = chartRef.current.getContext('2d');
+                    ctx.clearRect(0, 0, chartRef.current.width, chartRef.current.height);
                 }
                 
                 return () => {
                     if (chartInstance.current) {
                         chartInstance.current.destroy();
+                        chartInstance.current = null;
                     }
                 };
             }, [data]);
@@ -822,7 +1000,7 @@
             const chartInstance = useRef(null);
             
             useEffect(() => {
-                if (chartRef.current) {
+                if (chartRef.current && data && data.length > 0) {
                     const ctx = chartRef.current.getContext('2d');
                     
                     // Destroy previous chart if it exists
@@ -881,11 +1059,16 @@
                             }
                         }
                     });
+                } else if (chartRef.current) {
+                    // Clear canvas if no data
+                    const ctx = chartRef.current.getContext('2d');
+                    ctx.clearRect(0, 0, chartRef.current.width, chartRef.current.height);
                 }
                 
                 return () => {
                     if (chartInstance.current) {
                         chartInstance.current.destroy();
+                        chartInstance.current = null;
                     }
                 };
             }, [data]);
@@ -911,8 +1094,8 @@
                 // Simulated Tasmania weather data
                 return new Promise((resolve) => {
                     setTimeout(() => {
-                        const baseTemp = 8 + (Math.random() * 12); // 8-20°C typical for Tasmania
-                        const rainfall = 30 + (Math.random() * 70); // 30-100mm common in Tasmania
+                        const baseTemp = 8 + (Math.random() * 12);
+                        const rainfall = 30 + (Math.random() * 70);
                         resolve({
                             temperature: Math.round(baseTemp * 10) / 10,
                             rainfall: Math.round(rainfall * 10) / 10,
@@ -958,7 +1141,14 @@
                 if (choice.id === "explore" && updatedEcosystem.locationsVisited.length > ecosystemData.locationsVisited.length) {
                     const newLocation = updatedEcosystem.locationsVisited[updatedEcosystem.locationsVisited.length - 1];
                     setCurrentLocation(newLocation);
-                    setStoryLog(prevLog => [...prevLog, `You've discovered a new area: ${locations[newLocation].name}!`]);
+                    setStoryLog(prevLog => [...prevLog, `You've discovered a new area: ${locations[newLocation].name}! This location now has projects available.`]);
+                }
+            };
+
+            const handleLocationChange = (locationKey) => {
+                if (ecosystemData.locationsVisited.includes(locationKey)) {
+                    setCurrentLocation(locationKey);
+                    setStoryLog(prevLog => [...prevLog, `You travel to ${locations[locationKey].name}.`]);
                 }
             };
 
@@ -1203,7 +1393,7 @@
                                         className="bg-white hover:bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg transition btn-hover flex items-center"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                            <path d="M2 10a8 8 0 1116 0 8 8 0 01-16 0zm8-6a6 6 0 00-6 6c0 1.887.454 3.665 1.257 5.234a.5.5 0 00.656.254L10 14.21l4.087 2.184a.5.5 0 00.656-.254A5.98 5.98 0 0016 10a6 6 0 00-6-6zm0 2a4 4 0 014 4c0 1.27-.472 2.432-1.25 3.322l-.75-.75-2.5 2.5-2.5-2.5-.75.75A3.98 3.98 0 016 10a4 4 0 014-4zm0 1a3 3 0 00-3 3 3 3 0 003 3 3 3 0 003-3 3 3 0 00-3-3z" />
                                         </svg>
                                         {showCharts ? 'Hide Charts' : 'Show Charts'}
                                     </button>
@@ -1235,9 +1425,10 @@
                                         Your Adventure at {locations[currentLocation].name}
                                     </h2>
                                     
-                                    {/* Location Map */}
+                                    {/* Location Map - Now interactive */}
                                     <div className="mb-4">
-                                        <LocationMap locationKey={currentLocation} />
+                                        <LocationMap locationKey={currentLocation} onLocationChange={handleLocationChange} />
+                                        <p className="text-sm text-gray-600 mt-2">Click on any discovered location to travel there</p>
                                     </div>
                                     
                                     {/* Weather Data */}
@@ -1289,7 +1480,7 @@
                                                 disabled={ecosystemData.budget < choice.cost}
                                                 className={`${ecosystemData.budget < choice.cost ? 
                                                     'bg-gray-300 cursor-not-allowed' : 
-                                                    'bg-green-500 hover:bg-green-600'} 
+                                                    choice.className ? choice.className : 'bg-green-500 hover:bg-green-600'} 
                                                     text-white font-medium py-3 px-4 rounded-lg transition duration-300 transform hover:scale-105 btn-hover flex items-center justify-center`}
                                             >
                                                 {choice.cost > 0 && (
@@ -1460,6 +1651,34 @@
                                             </div>
                                         </div>
                                         
+                                        {/* Location Projects */}
+                                        {ecosystemData.unlockedProjects[currentLocation] && ecosystemData.unlockedProjects[currentLocation].length > 0 && (
+                                            <div>
+                                                <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Available Projects
+                                                </h3>
+                                                <div className="space-y-2">
+                                                    {locations[currentLocation].projects.map((project, idx) => (
+                                                        ecosystemData.unlockedProjects[currentLocation].includes(project.id) && (
+                                                            <div key={idx} className="flex items-center justify-between bg-green-50 p-2 rounded">
+                                                                <div>
+                                                                    <div className="font-medium">{project.name}</div>
+                                                                    <div className="text-sm text-gray-600">{project.effect}</div>
+                                                                </div>
+                                                                <span className="text-sm bg-green-200 text-green-800 px-2 py-1 rounded-full">
+                                                                    ${project.cost}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
                                         {ecosystemData.gameMode === 'team' && (
                                             <div>
                                                 <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center">
@@ -1500,8 +1719,15 @@
         }
 
         // Render the app
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<EcoQuest />);
+        const appContainer = document.getElementById('root');
+        if (ReactDOM.createRoot) {
+            // React 18+
+            const root = ReactDOM.createRoot(appContainer);
+            root.render(<EcoQuest />);
+        } else {
+            // React 17 and earlier
+            ReactDOM.render(<EcoQuest />, appContainer);
+        }
     </script>
 </body>
 </html>
