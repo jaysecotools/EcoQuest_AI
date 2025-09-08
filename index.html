@@ -570,156 +570,169 @@
             const budgetMultiplier = challengeMode.budgetMultiplier || 1;
             const eventFrequencyMultiplier = challengeMode.eventFrequency || 1;
             
-            // Update based on action
-            switch(choice.id) {
-                case "plant_shrubs":
-                    updatedData.shrubsPlanted += 1;
-                    updatedData.ecosystemHealth += 5;
-                    updatedData.biodiversityIndex += 3;
-                    updatedData.carbonSequestration += 0.5;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "plant_trees":
-                    updatedData.treesPlanted += 1;
-                    updatedData.ecosystemHealth += 8;
-                    updatedData.biodiversityIndex += 5;
-                    updatedData.carbonSequestration += 5;
-                    updatedData.waterQuality += 2;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "remove_weeds":
-                    updatedData.invasiveSpeciesRemoved += 1;
-                    updatedData.ecosystemHealth += 3;
-                    updatedData.biodiversityIndex += 2;
-                    updatedData.waterQuality += 1;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "observe_wildlife":
-                    // Random chance to discover new wildlife based on biodiversity
-                    if (Math.random() < updatedData.biodiversityIndex / 100 && updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
-                        const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
-                            species => !updatedData.wildlifeObserved.includes(species) && 
-                            tasmaniaWildlife[species].habitat === locationData.biome
-                        );
-                        if (possibleNewSpecies.length > 0) {
-                            const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
-                            updatedData.wildlifeObserved.push(newSpecies);
-                            updatedData.biodiversityIndex += 2;
-                        }
-                    }
-                    updatedData.ecosystemHealth += 1;
-                    break;
-                case "explore":
-                    // Explore new locations
-                    const unexploredLocations = Object.keys(locations).filter(
-                        loc => !updatedData.locationsVisited.includes(loc)
-                    );
-                    if (unexploredLocations.length > 0 && Math.random() > 0.5) {
-                        const newLocation = unexploredLocations[Math.floor(Math.random() * unexploredLocations.length)];
-                        updatedData.locationsVisited.push(newLocation);
-                        updatedData.currentLocation = newLocation;
-                        
-                        // Unlock all projects for this location
-                        if (!updatedData.unlockedProjects[newLocation]) {
-                            updatedData.unlockedProjects[newLocation] = locations[newLocation].projects.map(p => p.id);
-                        }
-                    }
-                    updatedData.ecosystemHealth += 1;
-                    break;
-                case "check_wetland":
-                    if (!updatedData.locationsVisited.includes('macquarie_harbor')) {
-                        updatedData.locationsVisited.push('macquarie_harbor');
-                    }
-                    if (!updatedData.wildlifeObserved.includes('platypus')) {
-                        updatedData.wildlifeObserved.push('platypus');
-                    }
-                    updatedData.ecosystemHealth += 4;
-                    updatedData.waterQuality += 5;
-                    break;
-                case "educational_program":
-                    updatedData.educationLevel += 10;
-                    updatedData.reputation += 5;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "fundraiser":
-                    // More effective fundraising based on reputation
-                    const fundraisingAmount = (300 + Math.floor(Math.random() * 400) + (updatedData.reputation * 2)) * budgetMultiplier;
-                    updatedData.budget += fundraisingAmount;
-                    updatedData.reputation += 5;
-                    break;
-                case "recruit_volunteers":
-                    updatedData.volunteers += 3 + Math.floor(Math.random() * 5);
-                    updatedData.reputation += 4;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "research_grants":
-                    updatedData.budget += (1500 + Math.floor(Math.random() * 2000)) * budgetMultiplier;
-                    updatedData.reputation += 8;
-                    break;
-                case "enact_policy":
-                    const policy = policyOptions.find(p => p.id === choice.policyId);
-                    if (policy) {
-                        updatedData.policiesEnacted.push(choice.policyId);
-                        updatedData.budget += (policy.budgetImpact || 0) * budgetMultiplier;
-                        updatedData.ecosystemHealth += policy.healthImpact || 0;
-                        updatedData.biodiversityIndex += policy.biodiversityImpact || 0;
-                        updatedData.waterQuality += policy.waterQualityImpact || 0;
-                        updatedData.reputation += policy.reputationImpact || 0;
-                        updatedData.co2Level += policy.co2Impact || 0;
-                        if (policy.volunteerImpact) {
-                            updatedData.volunteers += policy.volunteerImpact;
-                        }
-                    }
-                    break;
-                case "climate_mitigation":
-                    updatedData.ecosystemHealth += 5;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    // Reduce severity of next climate event
-                    if (updatedData.climateEvents.length > 0) {
-                        updatedData.climateEvents[0].severity = "low";
-                    }
-                    break;
-                case "hire_npc":
-                    const npc = npcTeamMembers.find(m => m.id === choice.npcId);
-                    if (npc && !updatedData.npcTeam.some(m => m.id === choice.npcId)) {
-                        updatedData.npcTeam.push(npc);
-                        updatedData.budget -= choice.cost * costMultiplier;
-                    }
-                    break;
-                case "clean_waterways":
-                    updatedData.waterQuality += 8;
-                    updatedData.ecosystemHealth += 4;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "install_filtration":
-                    updatedData.waterQuality += 10;
-                    updatedData.ecosystemHealth += 5;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "plant_riparian":
-                    updatedData.waterQuality += 12;
-                    updatedData.ecosystemHealth += 6;
-                    updatedData.biodiversityIndex += 4;
-                    updatedData.budget -= choice.cost * costMultiplier;
-                    break;
-                case "run_project":
-                    const project = locationData.projects.find(p => p.id === choice.projectId);
-                    if (project) {
-                        updatedData.ecosystemHealth += project.healthImpact || 0;
-                        updatedData.biodiversityIndex += project.biodiversityImpact || 0;
-                        updatedData.waterQuality += project.waterImpact || 0;
-                        updatedData.budget -= project.cost * costMultiplier;
-                        
-                        // Mark project as completed
-                        if (!updatedData.unlockedProjects[currentLocation]) {
-                            updatedData.unlockedProjects[currentLocation] = [];
-                        }
-                        updatedData.unlockedProjects[currentLocation] = updatedData.unlockedProjects[currentLocation].filter(id => id !== project.id);
-                    }
-                    break;
-                default:
-                    updatedData.ecosystemHealth += 1;
+           // Update based on action
+switch(choice.id) {
+    case "plant_shrubs":
+        updatedData.shrubsPlanted += 1;
+        updatedData.ecosystemHealth += 5;
+        updatedData.biodiversityIndex += 3;
+        updatedData.carbonSequestration += 0.5;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "plant_trees":
+        updatedData.treesPlanted += 1;
+        updatedData.ecosystemHealth += 8;
+        updatedData.biodiversityIndex += 5;
+        updatedData.carbonSequestration += 5;
+        updatedData.waterQuality += 2;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "remove_weeds":
+        updatedData.invasiveSpeciesRemoved += 1;
+        updatedData.ecosystemHealth += 3;
+        updatedData.biodiversityIndex += 2;
+        updatedData.waterQuality += 1;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "observe_wildlife":
+        // Random chance to discover new wildlife based on biodiversity
+        if (Math.random() < updatedData.biodiversityIndex / 100 && updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
+            const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
+                species => !updatedData.wildlifeObserved.includes(species) && 
+                tasmaniaWildlife[species].habitat === locationData.biome
+            );
+            if (possibleNewSpecies.length > 0) {
+                const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
+                updatedData.wildlifeObserved.push(newSpecies);
+                updatedData.biodiversityIndex += 2;
             }
+        }
+        updatedData.ecosystemHealth += 1;
+        break;
+    case "explore":
+        // Explore new locations
+        const unexploredLocations = Object.keys(locations).filter(
+            loc => !updatedData.locationsVisited.includes(loc)
+        );
+        if (unexploredLocations.length > 0 && Math.random() > 0.5) {
+            const newLocation = unexploredLocations[Math.floor(Math.random() * unexploredLocations.length)];
+            updatedData.locationsVisited.push(newLocation);
+            updatedData.currentLocation = newLocation;
+            
+            // Unlock all projects for this location
+            if (!updatedData.unlockedProjects[newLocation]) {
+                updatedData.unlockedProjects[newLocation] = locations[newLocation].projects.map(p => p.id);
+            }
+        }
+        updatedData.ecosystemHealth += 1;
+        break;
+    case "test_water":
+        updatedData.waterQuality += 5;
+        updatedData.ecosystemHealth += 2;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "check_wetland":
+        if (!updatedData.locationsVisited.includes('macquarie_harbor')) {
+            updatedData.locationsVisited.push('macquarie_harbor');
+        }
+        if (!updatedData.wildlifeObserved.includes('platypus')) {
+            updatedData.wildlifeObserved.push('platypus');
+        }
+        updatedData.ecosystemHealth += 4;
+        updatedData.waterQuality += 5;
+        break;
+    case "educational_program":
+        updatedData.educationLevel += 10;
+        updatedData.reputation += 5;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "fundraiser":
+        // More effective fundraising based on reputation
+        const fundraisingAmount = (300 + Math.floor(Math.random() * 400) + (updatedData.reputation * 2)) * budgetMultiplier;
+        updatedData.budget += fundraisingAmount;
+        updatedData.reputation += 5;
+        break;
+    case "recruit_volunteers":
+        updatedData.volunteers += 3 + Math.floor(Math.random() * 5);
+        updatedData.reputation += 4;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "research_grants":
+        updatedData.budget += (1500 + Math.floor(Math.random() * 2000)) * budgetMultiplier;
+        updatedData.reputation += 8;
+        break;
+    case "enact_policy":
+        const policy = policyOptions.find(p => p.id === choice.policyId);
+        if (policy) {
+            updatedData.policiesEnacted.push(choice.policyId);
+            updatedData.budget += (policy.budgetImpact || 0) * budgetMultiplier;
+            updatedData.ecosystemHealth += policy.healthImpact || 0;
+            updatedData.biodiversityIndex += policy.biodiversityImpact || 0;
+            updatedData.waterQuality += policy.waterQualityImpact || 0;
+            updatedData.reputation += policy.reputationImpact || 0;
+            updatedData.co2Level += policy.co2Impact || 0;
+            if (policy.volunteerImpact) {
+                updatedData.volunteers += policy.volunteerImpact;
+            }
+        }
+        break;
+    case "climate_mitigation":
+        updatedData.ecosystemHealth += 5;
+        updatedData.budget -= choice.cost * costMultiplier;
+        // Reduce severity of next climate event
+        if (updatedData.climateEvents.length > 0) {
+            updatedData.climateEvents[0].severity = "low";
+        }
+        break;
+    case "hire_npc":
+        const npc = npcTeamMembers.find(m => m.id === choice.npcId);
+        if (npc && !updatedData.npcTeam.some(m => m.id === choice.npcId)) {
+            updatedData.npcTeam.push(npc);
+            updatedData.budget -= choice.cost * costMultiplier;
+        }
+        break;
+    case "clean_waterways":
+        updatedData.waterQuality += 8;
+        updatedData.ecosystemHealth += 4;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "install_filtration":
+        updatedData.waterQuality += 10;
+        updatedData.ecosystemHealth += 5;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "plant_riparian":
+        updatedData.waterQuality += 12;
+        updatedData.ecosystemHealth += 6;
+        updatedData.biodiversityIndex += 4;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "run_project":
+        const project = locationData.projects.find(p => p.id === choice.projectId);
+        if (project) {
+            updatedData.ecosystemHealth += project.healthImpact || 0;
+            updatedData.biodiversityIndex += project.biodiversityImpact || 0;
+            updatedData.waterQuality += project.waterImpact || 0;
+            updatedData.budget -= project.cost * costMultiplier;
+            
+            // Mark project as completed
+            if (!updatedData.unlockedProjects[currentLocation]) {
+                updatedData.unlockedProjects[currentLocation] = [];
+            }
+            updatedData.unlockedProjects[currentLocation] = updatedData.unlockedProjects[currentLocation].filter(id => id !== project.id);
+        }
+        break;
+    case "build_habitat":
+        updatedData.ecosystemHealth += 7;
+        updatedData.biodiversityIndex += 6;
+        updatedData.budget -= choice.cost * costMultiplier;
+        break;
+    case "end_adventure":
+        // This case is handled separately in handleChoice function
+        break;
+    default:
+        updatedData.ecosystemHealth += 1;
+}
             
             // NPC team effects
             updatedData.npcTeam.forEach(npc => {
