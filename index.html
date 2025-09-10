@@ -1017,9 +1017,9 @@ switch(choice.id) {
                 specialChoices.push({ id: "end_adventure", text: "End Adventure", cost: 0, time: 0 });
             }
             
-            // Return 3-5 choices
+            // Return 3-10 choices
             const allChoices = [...new Set([...specialChoices, ...baseChoices])];
-            return allChoices.slice(0, 5);
+            return allChoices.slice(0, 10);
         };
 
         // Map component for location visualization
