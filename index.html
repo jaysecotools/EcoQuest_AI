@@ -4,16 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoQuest: Tasmania Conservation</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Chart.js for data visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Leaflet for maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -126,6 +121,8 @@
         .location-unlocked {
             animation: pulse 2s infinite;
             border: 2px solid #10b981 !important;
+            background-color: #d1fae5 !important; /* Light green background */
+            color: #065f46 !important; /* Dark green text */
         }
         .tooltip {
             position: relative;
@@ -182,7 +179,7 @@
         .summer-overlay {
             background: radial-gradient(circle, #ffd3b6 0%, transparent 70%);
         }
-        .fall-overlay {
+        .autumn-overlay {
             background: radial-gradient(circle, #ffaaa5 0%, transparent 70%);
         }
         .winter-overlay {
@@ -214,7 +211,7 @@
             pademelon: { name: "Tasmanian Pademelon", rarity: "common", habitat: "forest", indicator: "understory health", image: "🦘" },
             wombat: { name: "Common Wombat", rarity: "common", habitat: "forest", indicator: "soil health", image: "🐻" },
             black_currawong: { name: "Black Currawong", rarity: "common", habitat: "forest", indicator: "forest health", image: "🐦" },
-            freshwater_lobster: { name: "Tasmanian Giant Freshwater Lobster", rarity: "endangered", habitat: "riparian", indicator: "water quality", image: "🦞" },
+            Maugean_skate: { name: "Maugean Skate", rarity: "endangered", habitat: "harbour", indicator: "water quality", image: "🦞" },
             blue_gum: { name: "Tasmanian Blue Gum", rarity: "common", habitat: "forest", indicator: "forest maturity", image: "🌳" }
         };
 
@@ -225,7 +222,7 @@
             "Tasmania's Tarkine rainforest is the second-largest temperate rainforest in the world.",
             "Over 40% of Tasmania is protected as national parks and reserves.",
             "Tasmania is home to 12 endemic bird species found nowhere else on Earth.",
-            "The Tasmanian giant freshwater lobster is the largest freshwater invertebrate in the world.",
+            "The Maugean skate is a rare ray found only in Tasmania's Macquarie Harbour and Bathurst Harbour, making it one of the world's few estuarine skates and a species at extreme risk of extinction.",
             "Tasmania has some of the cleanest air in the world, measured at Cape Grim.",
             "The island was connected to mainland Australia until about 12,000 years ago.",
             "Tasmania has 18 national parks, covering diverse ecosystems from alpine to coastal.",
@@ -233,20 +230,20 @@
         ];
 
         // Achievement system
-        const achievements = [
-            { id: "first_tree", name: "First Tree Planted", description: "Plant your first native tree", icon: "🌱", condition: (data) => data.treesPlanted >= 1 },
-            { id: "five_species", name: "Wildlife Observer", description: "Observe 5 different species", icon: "🐾", condition: (data) => data.wildlifeObserved.length >= 5 },
-            { id: "health_75", name: "Ecosystem Steward", description: "Reach 75% ecosystem health", icon: "💚", condition: (data) => data.ecosystemHealth >= 75 },
-            { id: "all_locations", name: "Explorer", description: "Discover all locations", icon: "🗺️", condition: (data) => data.locationsVisited.length >= Object.keys(locations).length },
-            { id: "water_quality", name: "Water Guardian", description: "Achieve 80% water quality", icon: "💧", condition: (data) => data.waterQuality >= 80 },
-            { id: "carbon_100", name: "Carbon Champion", description: "Sequester 100 tons of carbon", icon: "🌍", condition: (data) => data.carbonSequestration >= 100 },
-            { id: "volunteers_10", name: "Community Leader", description: "Recruit 10 volunteers", icon: "👥", condition: (data) => data.volunteers >= 10 },
-            { id: "all_projects", name: "Project Manager", description: "Complete all projects in one location", icon: "✅", condition: (data) => {
-                return Object.values(data.unlockedProjects).some(projects => projects.length === 0);
-            }},
-            { id: "budget_5000", name: "Financial Manager", description: "Accumulate $5000 budget", icon: "💰", condition: (data) => data.budget >= 5000 },
-            { id: "all_achievements", name: "Master Conservationist", description: "Unlock all achievements", icon: "🏆", condition: (data, achieved) => achieved.length >= achievements.length - 1 }
-        ];
+const achievements = [
+	{ id: "first_tree", name: "First Tree Planted", description: "Plant your first native tree", icon: "🌱", condition: (data) => data.treesPlanted >= 1 },
+	{ id: "five_species", name: "Wildlife Observer", description: "Observe 5 different species", icon: "🐾", condition: (data) => data.wildlifeObserved.length >= 5 },
+    { id: "health_75", name: "Ecosystem Steward", description: "Reach 75% ecosystem health", icon: "💚", condition: (data) => data.ecosystemHealth >= 75 },
+    { id: "all_locations", name: "Explorer", description: "Discover all locations", icon: "🗺️", condition: (data) => data.locationsVisited.length >= Object.keys(locations).length },
+    { id: "water_quality", name: "Water Guardian", description: "Achieve 80% water quality", icon: "💧", condition: (data) => data.waterQuality >= 80 },
+    { id: "carbon_100", name: "Carbon Champion", description: "Sequester 100 tons of carbon", icon: "🌍", condition: (data) => data.carbonSequestration >= 100 },
+    { id: "volunteers_10", name: "Community Leader", description: "Recruit 10 volunteers", icon: "👥", condition: (data) => data.volunteers >= 10 },
+	{ id: "all_projects", name: "Project Manager", description: "Complete all projects in one location", icon: "✅", condition: (data) => {
+return Object.values(data.unlockedProjects).some(projects => projects && projects.length === 0);
+}},
+    { id: "budget_5000", name: "Financial Manager", description: "Accumulate $5000 budget", icon: "💰", condition: (data) => data.budget >= 5000 },
+    { id: "all_achievements", name: "Master Conservationist", description: "Unlock all achievements", icon: "🏆", condition: (data, achieved) => achieved.length >= achievements.length }
+];
 
         // Challenge modes
         const challengeModes = {
@@ -255,62 +252,6 @@
             budget_restricted: { name: "Budget Restricted", description: "Limited funding with higher costs", budgetMultiplier: 0.7, costMultiplier: 1.3 },
             climate_crisis: { name: "Climate Crisis", description: "Increased climate events and challenges", eventFrequency: 2, climateSeverity: 1.5 }
         };
-
-        // Enhanced ecosystem data with more metrics
-        const initialEcosystemData = {
-            shrubsPlanted: 0,
-            treesPlanted: 0,
-            wildlifeObserved: [],
-            invasiveSpeciesRemoved: 0,
-            ecosystemHealth: 50,
-            biodiversityIndex: 30,
-            carbonSequestration: 0,
-            waterQuality: 40,
-            locationsVisited: ['tarkine_forest'],
-            currentLocation: 'tarkine_forest',
-            season: 'spring',
-            day: 1,
-            budget: 1500,
-            reputation: 50,
-            educationLevel: 0,
-            volunteers: 0,
-            historicalData: [{day: 1, health: 50, biodiversity: 30, waterQuality: 40}],
-            temperature: 12,
-            rainfall: 80,
-            co2Level: 410,
-            policiesEnacted: [],
-            climateEvents: [],
-            gameMode: 'solo',
-            npcTeam: [],
-            chatMessages: [],
-            unlockedProjects: {},
-            achievementsUnlocked: [],
-            challengeMode: 'normal',
-            tutorialStep: 0
-        };
-
-        // Expanded story elements with Tasmania focus
-        const initialStoryLog = [
-            "🌿 Welcome to EcoQuest: Tasmania! Your mission is to restore balance to Tasmania's unique ecosystems.",
-            "You arrive in the Tarkine rainforest, one of the last temperate rainforests in the world with ancient myrtle trees and lush ferns."
-        ];
-
-        // Tutorial steps
-        const tutorialSteps = [
-            { message: "Welcome to EcoQuest Tasmania! Click on actions to restore the ecosystem.", highlight: "choices" },
-            { message: "Monitor your resources and ecosystem health in the dashboard.", highlight: "stats" },
-            { message: "Explore new locations to discover more conservation opportunities.", highlight: "map" },
-            { message: "Complete projects to make significant improvements to the environment.", highlight: "projects" },
-            { message: "You're ready to explore on your own! Check the help section if you need guidance.", highlight: null }
-        ];
-
-        // More diverse initial choices
-        const initialChoices = [
-            { id: "plant_shrubs", text: "Plant native shrubs", cost: 40, time: 1 }, // Reduced cost for balance
-            { id: "remove_weeds", text: "Remove invasive species", cost: 15, time: 1 }, // Reduced cost for balance
-            { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
-            { id: "explore", text: "Explore nearby areas", cost: 0, time: 1, className: "bg-blue-100 border-blue-300" }
-        ];
 
         // Tasmania-specific locations with projects
         const locations = {
@@ -372,19 +313,77 @@
             },
             macquarie_harbor: {
                 name: "Macquarie Harbor",
-                description: "A large harbor with salmon farms, historical sites, and important wetland habitats.",
+                description: "A large harbor with salmon farming and historical sites.",
                 restorationPotential: "Medium",
-                keySpecies: ["platypus", "freshwater_lobster", "black_currawong"],
+                keySpecies: ["platypus", "maugean_skate", "black_currawong"],
                 threats: ["aquaculture", "pollution", "water quality"],
                 coordinates: [-42.3, 145.3],
-                biome: "wetland",
+                biome: "harbour",
                 projects: [
-                    { id: "wetland_restoration", name: "Wetland Restoration", cost: 180, effect: "Restore degraded wetland areas", healthImpact: 12, waterImpact: 15, biodiversityImpact: 10 }, // Reduced cost
+                    { id: "harbour_restoration", name: "Harbour Restoration", cost: 180, effect: "Restore degraded harbour areas", healthImpact: 12, waterImpact: 15, biodiversityImpact: 10 }, // Reduced cost
                     { id: "water_quality", name: "Water Quality Improvement", cost: 150, effect: "Improve water quality through filtration", healthImpact: 8, waterImpact: 18 }, // Reduced cost
-                    { id: "lobster_conservation", name: "Freshwater Lobster Conservation", cost: 120, effect: "Protect endangered lobster habitat", healthImpact: 7, biodiversityImpact: 12 } // Reduced cost
+                    { id: "Maugean_skate_conservation", name: "Maugean skate Conservation", cost: 120, effect: "Protect endangered Maugean skate habitat", healthImpact: 7, biodiversityImpact: 12 } // Reduced cost
                 ]
             }
         };
+
+        // Enhanced ecosystem data with more metrics
+        const initialEcosystemData = {
+            shrubsPlanted: 0,
+            treesPlanted: 0,
+            wildlifeObserved: [],
+            invasiveSpeciesRemoved: 0,
+            ecosystemHealth: 50,
+            biodiversityIndex: 30,
+            carbonSequestration: 0,
+            waterQuality: 40,
+            locationsVisited: ['tarkine_forest'],
+            currentLocation: 'tarkine_forest',
+            season: 'spring',
+            day: 1,
+            budget: 1500,
+            reputation: 50,
+            educationLevel: 0,
+            volunteers: 0,
+            historicalData: [{day: 1, health: 50, biodiversity: 30, waterQuality: 40}],
+            temperature: 12,
+            rainfall: 80,
+            co2Level: 410,
+            policiesEnacted: [],
+            climateEvents: [],
+            gameMode: 'solo',
+            npcTeam: [],
+            chatMessages: [],
+            unlockedProjects: {
+                tarkine_forest: locations.tarkine_forest.projects.map(p => p.id)
+            },
+            achievementsUnlocked: [],
+            challengeMode: 'normal',
+            tutorialStep: 0
+        };
+
+        // Expanded story elements with Tasmania focus
+        const initialStoryLog = [
+            "🌿 Welcome to EcoQuest: Tasmania! Your mission is to restore balance to Tasmania's unique ecosystems.",
+            "You arrive in the Tarkine rainforest, one of the last temperate rainforests in the world with ancient myrtle trees and lush ferns."
+        ];
+
+        // Tutorial steps
+        const tutorialSteps = [
+            { message: "Welcome to EcoQuest Tasmania! Click on actions to restore the ecosystem.", highlight: "choices" },
+            { message: "Monitor your resources and ecosystem health in the dashboard.", highlight: "stats" },
+            { message: "Explore new locations to discover more conservation opportunities.", highlight: "map" },
+            { message: "Complete projects to make significant improvements to the environment.", highlight: "projects" },
+            { message: "You're ready to explore on your own! Check the help section if you need guidance.", highlight: null }
+        ];
+
+        // More diverse initial choices
+        const initialChoices = [
+            { id: "plant_shrubs", text: "Plant native shrubs", cost: 40, time: 1 }, // Reduced cost for balance
+            { id: "remove_weeds", text: "Remove invasive species", cost: 15, time: 1 }, // Reduced cost for balance
+            { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
+            { id: "explore", text: "Explore nearby areas", cost: 0, time: 1, className: "bg-blue-100 border-blue-300" }
+        ];
 
         // NPC team members
         const npcTeamMembers = [
@@ -417,7 +416,7 @@
         const tooltips = {
             ecosystemHealth: "Overall health of the ecosystem based on biodiversity, water quality, and habitat condition",
             biodiversityIndex: "Measure of species diversity in the area - higher is better",
-            waterQuality: "Quality of water in rivers and wetlands - affects aquatic life",
+            waterQuality: "Quality of water in rivers and harbours - affects aquatic life",
             budget: "Available funds for conservation actions - earn more through fundraising",
             reputation: "Public support for your conservation efforts - affects volunteer recruitment",
             volunteers: "Community members helping with conservation - provides passive benefits",
@@ -473,10 +472,10 @@
                     "Exploring reveals issues that need addressing.",
                     "You discover beautiful areas that support native species."
                 ],
-                "check_wetland": [
-                    "The wetland is thriving with native plants and aquatic insects.",
-                    "You notice invasive species are starting to take over part of the wetland.",
-                    "The wetland acts as a natural filter, improving water quality."
+                "check_harbour": [
+                    "The harbour is thriving with native plants and aquatic insects.",
+                    "You notice invasive species are starting to take over part of the harbour.",
+                    "The harbour acts as a natural filter, improving water quality."
                 ],
                 "educational_program": [
                     "You organize a community workshop on native plants. Attendance is good!",
@@ -570,169 +569,173 @@
             const budgetMultiplier = challengeMode.budgetMultiplier || 1;
             const eventFrequencyMultiplier = challengeMode.eventFrequency || 1;
             
-           // Update based on action
-switch(choice.id) {
-    case "plant_shrubs":
-        updatedData.shrubsPlanted += 1;
-        updatedData.ecosystemHealth += 5;
-        updatedData.biodiversityIndex += 3;
-        updatedData.carbonSequestration += 0.5;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "plant_trees":
-        updatedData.treesPlanted += 1;
-        updatedData.ecosystemHealth += 8;
-        updatedData.biodiversityIndex += 5;
-        updatedData.carbonSequestration += 5;
-        updatedData.waterQuality += 2;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "remove_weeds":
-        updatedData.invasiveSpeciesRemoved += 1;
-        updatedData.ecosystemHealth += 3;
-        updatedData.biodiversityIndex += 2;
-        updatedData.waterQuality += 1;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "observe_wildlife":
-        // Random chance to discover new wildlife based on biodiversity
-        if (Math.random() < updatedData.biodiversityIndex / 100 && updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
-            const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
-                species => !updatedData.wildlifeObserved.includes(species) && 
-                tasmaniaWildlife[species].habitat === locationData.biome
-            );
-            if (possibleNewSpecies.length > 0) {
-                const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
-                updatedData.wildlifeObserved.push(newSpecies);
-                updatedData.biodiversityIndex += 2;
+            // Update based on action
+            switch(choice.id) {
+                case "plant_shrubs":
+                    updatedData.shrubsPlanted += 1;
+                    updatedData.ecosystemHealth += 5;
+                    updatedData.biodiversityIndex += 3;
+                    updatedData.carbonSequestration += 0.5;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "plant_trees":
+                    updatedData.treesPlanted += 1;
+                    updatedData.ecosystemHealth += 8;
+                    updatedData.biodiversityIndex += 5;
+                    updatedData.carbonSequestration += 5;
+                    updatedData.waterQuality += 2;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "remove_weeds":
+                    updatedData.invasiveSpeciesRemoved += 1;
+                    updatedData.ecosystemHealth += 3;
+                    updatedData.biodiversityIndex += 2;
+                    updatedData.waterQuality += 1;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+case "observe_wildlife":
+    // Random chance to discover new wildlife based on biodiversity
+    if (Math.random() < updatedData.biodiversityIndex / 100 && 
+        updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
+        const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
+            species => !updatedData.wildlifeObserved.includes(species) && 
+            tasmaniaWildlife[species].habitat === locationData.biome
+        );
+        if (possibleNewSpecies.length > 0) {
+            const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
+            updatedData.wildlifeObserved.push(newSpecies);
+            updatedData.biodiversityIndex += 2;
+            
+            // Add notification to story log
+            updatedData.storyLog.push(`🦘 You discovered a ${tasmaniaWildlife[newSpecies].name}!`);
+        }
+    }
+    updatedData.ecosystemHealth += 1;
+    break;
+                case "explore":
+                    // Explore new locations
+                    const unexploredLocations = Object.keys(locations).filter(
+                        loc => !updatedData.locationsVisited.includes(loc)
+                    );
+                    if (unexploredLocations.length > 0 && Math.random() > 0.5) {
+                        const newLocation = unexploredLocations[Math.floor(Math.random() * unexploredLocations.length)];
+                        updatedData.locationsVisited.push(newLocation);
+                        updatedData.currentLocation = newLocation;
+                        
+                        // Unlock all projects for this location
+                        if (!updatedData.unlockedProjects[newLocation]) {
+                            updatedData.unlockedProjects[newLocation] = locations[newLocation].projects.map(p => p.id);
+                        }
+                    }
+                    updatedData.ecosystemHealth += 1;
+                    break;
+                case "test_water":
+                    updatedData.waterQuality += 5;
+                    updatedData.ecosystemHealth += 2;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "check_harbour":
+                    if (!updatedData.locationsVisited.includes('macquarie_harbor')) {
+                        updatedData.locationsVisited.push('macquarie_harbor');
+                    }
+                    if (!updatedData.wildlifeObserved.includes('platypus')) {
+                        updatedData.wildlifeObserved.push('platypus');
+                    }
+                    updatedData.ecosystemHealth += 4;
+                    updatedData.waterQuality += 5;
+                    break;
+                case "educational_program":
+                    updatedData.educationLevel += 10;
+                    updatedData.reputation += 5;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "fundraiser":
+                    // More effective fundraising based on reputation
+                    const fundraisingAmount = (300 + Math.floor(Math.random() * 400) + (updatedData.reputation * 2)) * budgetMultiplier;
+                    updatedData.budget += fundraisingAmount;
+                    updatedData.reputation += 5;
+                    break;
+                case "recruit_volunteers":
+                    updatedData.volunteers += 3 + Math.floor(Math.random() * 5);
+                    updatedData.reputation += 4;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "research_grants":
+                    updatedData.budget += (1500 + Math.floor(Math.random() * 2000)) * budgetMultiplier;
+                    updatedData.reputation += 8;
+                    break;
+                case "enact_policy":
+                    const policy = policyOptions.find(p => p.id === choice.policyId);
+                    if (policy) {
+                        updatedData.policiesEnacted.push(choice.policyId);
+                        updatedData.budget += (policy.budgetImpact || 0) * budgetMultiplier;
+                        updatedData.ecosystemHealth += policy.healthImpact || 0;
+                        updatedData.biodiversityIndex += policy.biodiversityImpact || 0;
+                        updatedData.waterQuality += policy.waterQualityImpact || 0;
+                        updatedData.reputation += policy.reputationImpact || 0;
+                        updatedData.co2Level += policy.co2Impact || 0;
+                        if (policy.volunteerImpact) {
+                            updatedData.volunteers += policy.volunteerImpact;
+                        }
+                    }
+                    break;
+                case "climate_mitigation":
+                    updatedData.ecosystemHealth += 5;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    // Reduce severity of next climate event
+                    if (updatedData.climateEvents.length > 0) {
+                        updatedData.climateEvents[0].severity = "low";
+                    }
+                    break;
+                case "hire_npc":
+                    const npc = npcTeamMembers.find(m => m.id === choice.npcId);
+                    if (npc && !updatedData.npcTeam.some(m => m.id === choice.npcId)) {
+                        updatedData.npcTeam.push(npc);
+                        updatedData.budget -= choice.cost * costMultiplier;
+                    }
+                    break;
+                case "clean_waterways":
+                    updatedData.waterQuality += 8;
+                    updatedData.ecosystemHealth += 4;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "install_filtration":
+                    updatedData.waterQuality += 10;
+                    updatedData.ecosystemHealth += 5;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "plant_riparian":
+                    updatedData.waterQuality += 12;
+                    updatedData.ecosystemHealth += 6;
+                    updatedData.biodiversityIndex += 4;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "run_project":
+                    const project = locationData.projects.find(p => p.id === choice.projectId);
+                    if (project) {
+                        updatedData.ecosystemHealth += project.healthImpact || 0;
+                        updatedData.biodiversityIndex += project.biodiversityImpact || 0;
+                        updatedData.waterQuality += project.waterImpact || 0;
+                        updatedData.budget -= project.cost * costMultiplier;
+                        
+                        // Mark project as completed
+                        if (!updatedData.unlockedProjects[currentLocation]) {
+                            updatedData.unlockedProjects[currentLocation] = [];
+                        }
+                        updatedData.unlockedProjects[currentLocation] = updatedData.unlockedProjects[currentLocation].filter(id => id !== project.id);
+                    }
+                    break;
+                case "build_habitat":
+                    updatedData.ecosystemHealth += 7;
+                    updatedData.biodiversityIndex += 6;
+                    updatedData.budget -= choice.cost * costMultiplier;
+                    break;
+                case "end_adventure":
+                    // This case is handled separately in handleChoice function
+                    break;
+                default:
+                    updatedData.ecosystemHealth += 1;
             }
-        }
-        updatedData.ecosystemHealth += 1;
-        break;
-    case "explore":
-        // Explore new locations
-        const unexploredLocations = Object.keys(locations).filter(
-            loc => !updatedData.locationsVisited.includes(loc)
-        );
-        if (unexploredLocations.length > 0 && Math.random() > 0.5) {
-            const newLocation = unexploredLocations[Math.floor(Math.random() * unexploredLocations.length)];
-            updatedData.locationsVisited.push(newLocation);
-            updatedData.currentLocation = newLocation;
-            
-            // Unlock all projects for this location
-            if (!updatedData.unlockedProjects[newLocation]) {
-                updatedData.unlockedProjects[newLocation] = locations[newLocation].projects.map(p => p.id);
-            }
-        }
-        updatedData.ecosystemHealth += 1;
-        break;
-    case "test_water":
-        updatedData.waterQuality += 5;
-        updatedData.ecosystemHealth += 2;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "check_wetland":
-        if (!updatedData.locationsVisited.includes('macquarie_harbor')) {
-            updatedData.locationsVisited.push('macquarie_harbor');
-        }
-        if (!updatedData.wildlifeObserved.includes('platypus')) {
-            updatedData.wildlifeObserved.push('platypus');
-        }
-        updatedData.ecosystemHealth += 4;
-        updatedData.waterQuality += 5;
-        break;
-    case "educational_program":
-        updatedData.educationLevel += 10;
-        updatedData.reputation += 5;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "fundraiser":
-        // More effective fundraising based on reputation
-        const fundraisingAmount = (300 + Math.floor(Math.random() * 400) + (updatedData.reputation * 2)) * budgetMultiplier;
-        updatedData.budget += fundraisingAmount;
-        updatedData.reputation += 5;
-        break;
-    case "recruit_volunteers":
-        updatedData.volunteers += 3 + Math.floor(Math.random() * 5);
-        updatedData.reputation += 4;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "research_grants":
-        updatedData.budget += (1500 + Math.floor(Math.random() * 2000)) * budgetMultiplier;
-        updatedData.reputation += 8;
-        break;
-    case "enact_policy":
-        const policy = policyOptions.find(p => p.id === choice.policyId);
-        if (policy) {
-            updatedData.policiesEnacted.push(choice.policyId);
-            updatedData.budget += (policy.budgetImpact || 0) * budgetMultiplier;
-            updatedData.ecosystemHealth += policy.healthImpact || 0;
-            updatedData.biodiversityIndex += policy.biodiversityImpact || 0;
-            updatedData.waterQuality += policy.waterQualityImpact || 0;
-            updatedData.reputation += policy.reputationImpact || 0;
-            updatedData.co2Level += policy.co2Impact || 0;
-            if (policy.volunteerImpact) {
-                updatedData.volunteers += policy.volunteerImpact;
-            }
-        }
-        break;
-    case "climate_mitigation":
-        updatedData.ecosystemHealth += 5;
-        updatedData.budget -= choice.cost * costMultiplier;
-        // Reduce severity of next climate event
-        if (updatedData.climateEvents.length > 0) {
-            updatedData.climateEvents[0].severity = "low";
-        }
-        break;
-    case "hire_npc":
-        const npc = npcTeamMembers.find(m => m.id === choice.npcId);
-        if (npc && !updatedData.npcTeam.some(m => m.id === choice.npcId)) {
-            updatedData.npcTeam.push(npc);
-            updatedData.budget -= choice.cost * costMultiplier;
-        }
-        break;
-    case "clean_waterways":
-        updatedData.waterQuality += 8;
-        updatedData.ecosystemHealth += 4;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "install_filtration":
-        updatedData.waterQuality += 10;
-        updatedData.ecosystemHealth += 5;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "plant_riparian":
-        updatedData.waterQuality += 12;
-        updatedData.ecosystemHealth += 6;
-        updatedData.biodiversityIndex += 4;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "run_project":
-        const project = locationData.projects.find(p => p.id === choice.projectId);
-        if (project) {
-            updatedData.ecosystemHealth += project.healthImpact || 0;
-            updatedData.biodiversityIndex += project.biodiversityImpact || 0;
-            updatedData.waterQuality += project.waterImpact || 0;
-            updatedData.budget -= project.cost * costMultiplier;
-            
-            // Mark project as completed
-            if (!updatedData.unlockedProjects[currentLocation]) {
-                updatedData.unlockedProjects[currentLocation] = [];
-            }
-            updatedData.unlockedProjects[currentLocation] = updatedData.unlockedProjects[currentLocation].filter(id => id !== project.id);
-        }
-        break;
-    case "build_habitat":
-        updatedData.ecosystemHealth += 7;
-        updatedData.biodiversityIndex += 6;
-        updatedData.budget -= choice.cost * costMultiplier;
-        break;
-    case "end_adventure":
-        // This case is handled separately in handleChoice function
-        break;
-    default:
-        updatedData.ecosystemHealth += 1;
-}
             
             // NPC team effects
             updatedData.npcTeam.forEach(npc => {
@@ -772,7 +775,7 @@ switch(choice.id) {
             }
             
             if (updatedData.day % 30 === 0) {
-                const seasons = ['spring', 'summer', 'fall', 'winter'];
+                const seasons = ['spring', 'summer', 'autumn', 'winter'];
                 const currentSeasonIndex = seasons.indexOf(updatedData.season);
                 updatedData.season = seasons[(currentSeasonIndex + 1) % 4];
                 
@@ -785,7 +788,7 @@ switch(choice.id) {
                     updatedData.temperature += 2;
                     updatedData.rainfall -= 5;
                     updatedData.waterQuality -= 2;
-                } else if (updatedData.season === 'fall') {
+                } else if (updatedData.season === 'autumn') {
                     updatedData.temperature -= 2;
                     updatedData.waterQuality += 1;
                 } else if (updatedData.season === 'winter') {
@@ -869,15 +872,16 @@ switch(choice.id) {
                 });
             }
             
-            // Check for achievements
-            achievements.forEach(achievement => {
-                if (!updatedData.achievementsUnlocked.includes(achievement.id) && 
-                    achievement.condition(updatedData, updatedData.achievementsUnlocked)) {
-                    updatedData.achievementsUnlocked.push(achievement.id);
-                    updatedData.storyLog = updatedData.storyLog || [];
-                    updatedData.storyLog.push(`🎉 Achievement Unlocked: ${achievement.name}! ${achievement.description}`);
-                }
-            });
+// Check for achievements
+achievements.forEach(achievement => {
+    if (!updatedData.achievementsUnlocked.includes(achievement.id) && 
+        achievement.condition(updatedData, updatedData.achievementsUnlocked)) {
+        updatedData.achievementsUnlocked.push(achievement.id);
+        // Add achievement notification to story log
+        updatedData.storyLog = updatedData.storyLog || [];
+        updatedData.storyLog.push(`🎉 Achievement Unlocked: ${achievement.name}! ${achievement.description}`);
+    }
+});
             
             // Random Tasmania fact popup (5% chance)
             if (Math.random() < 0.05) {
@@ -889,7 +893,7 @@ switch(choice.id) {
             return updatedData;
         };
 
-        // More dynamic choice generation
+        // More dynamic choice generation - FIXED VERSION
         const getNextChoices = (ecosystemData, currentLocation) => {
             const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam, unlockedProjects } = ecosystemData;
             const challengeMode = challengeModes[ecosystemData.challengeMode];
@@ -902,46 +906,7 @@ switch(choice.id) {
             
             const specialChoices = [];
             
-            // Restoration actions
-            if (budget >= 50 * costMultiplier) {
-                specialChoices.push({ id: "plant_shrubs", text: "Plant native shrubs", cost: 50, time: 1 });
-            }
-            
-            if (budget >= 20 * costMultiplier) {
-                specialChoices.push({ id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 });
-            }
-            
-            // Tree planting is now available earlier
-            if (budget >= 100 * costMultiplier) {
-                specialChoices.push({ id: "plant_trees", text: "Plant native trees", cost: 100, time: 2, className: "tree-planting-action" });
-            }
-            
-            if (locationsVisited.includes('macquarie_harbor')) {
-                specialChoices.push({ id: "check_wetland", text: "Monitor wetland health", cost: 0, time: 1, className: "water-quality-action" });
-            }
-            
-            if (ecosystemHealth > 70 && budget >= 150 * costMultiplier) {
-                specialChoices.push({ id: "build_habitat", text: "Build habitat structures", cost: 150, time: 2 });
-            }
-            
-            if (ecosystemHealth > 60 && budget >= 80 * costMultiplier) {
-                specialChoices.push({ id: "test_water", text: "Conduct water quality tests", cost: 80, time: 1, className: "water-quality-action" });
-            }
-            
-            // Water quality improvement actions
-            if (budget >= 120 * costMultiplier) {
-                specialChoices.push({ id: "clean_waterways", text: "Clean up waterways", cost: 120, time: 2, className: "water-quality-action" });
-            }
-            
-            if (budget >= 200 * costMultiplier) {
-                specialChoices.push({ id: "install_filtration", text: "Install natural filtration", cost: 200, time: 3, className: "water-quality-action" });
-            }
-            
-            if (budget >= 150 * costMultiplier) {
-                specialChoices.push({ id: "plant_riparian", text: "Plant riparian vegetation", cost: 150, time: 2, className: "water-quality-action tree-planting-action" });
-            }
-            
-            // Location-specific projects
+            // FIRST: Add available projects for current location (PRIORITY)
             if (unlockedProjects[currentLocation] && unlockedProjects[currentLocation].length > 0) {
                 locations[currentLocation].projects.forEach(project => {
                     if (unlockedProjects[currentLocation].includes(project.id) && budget >= project.cost * costMultiplier) {
@@ -951,74 +916,54 @@ switch(choice.id) {
                             cost: project.cost,
                             time: 2,
                             projectId: project.id,
-                            className: "location-unlocked"
+                            className: "location-unlocked pulse-animation"
                         });
                     }
                 });
             }
             
-            // Community engagement actions
-            if (reputation >= 20 && budget >= 80 * costMultiplier) {
-                specialChoices.push({ id: "educational_program", text: "Run educational program", cost: 80, time: 2 });
+            // THEN: Add other actions (only if we have space)
+            if (budget >= 50 * costMultiplier && specialChoices.length < 3) {
+                specialChoices.push({ id: "plant_shrubs", text: "Plant native shrubs", cost: 50, time: 1 });
             }
             
-            if (reputation >= 15) {
-                specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 30, time: 2, className: "fundraising-action" });
+            if (budget >= 20 * costMultiplier && specialChoices.length < 3) {
+                specialChoices.push({ id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 });
             }
             
-            if (reputation >= 25) {
-                specialChoices.push({ id: "recruit_volunteers", text: "Recruit volunteers", cost: 20, time: 1 });
+            if (budget >= 100 * costMultiplier && specialChoices.length < 3) {
+                specialChoices.push({ id: "plant_trees", text: "Plant native trees", cost: 100, time: 2, className: "tree-planting-action" });
             }
             
-            if (educationLevel >= 30 && reputation >= 40) {
-                specialChoices.push({ id: "research_grants", text: "Apply for research grants", cost: 80, time: 3 });
-            }
-            
-            // Policy options (only show if not already enacted)
-            policyOptions.forEach(policy => {
-                if (!policiesEnacted.includes(policy.id) && budget >= Math.abs(policy.cost) * costMultiplier && reputation >= 30) {
-                    specialChoices.push({ 
-                        id: "enact_policy", 
-                        text: `Enact: ${policy.name}`, 
-                        cost: policy.cost, 
-                        time: 3,
-                        policyId: policy.id
-                    });
+            // Add a few more essential actions if we still have space
+            if (specialChoices.length < 3) {
+                if (locationsVisited.includes('macquarie_harbor')) {
+                    specialChoices.push({ id: "check_harbour", text: "Monitor harbour health", cost: 0, time: 1, className: "water-quality-action" });
                 }
-            });
-            
-            // NPC hiring options
-            if (ecosystemData.gameMode === 'team') {
-                npcTeamMembers.forEach(npc => {
-                    if (!npcTeam.some(m => m.id === npc.id) && budget >= npc.cost * costMultiplier) {
-                        specialChoices.push({
-                            id: "hire_npc",
-                            text: `Hire: ${npc.name} (${npc.role})`,
-                            cost: npc.cost,
-                            time: 2,
-                            npcId: npc.id
-                        });
-                    }
-                });
-            }
-            
-            // Climate mitigation options
-            if (climateEvents.length > 0 && climateEvents[0].active && budget >= 150 * costMultiplier) {
-                specialChoices.push({ 
-                    id: "climate_mitigation", 
-                    text: `Mitigate: ${climateEvents[0].name}`, 
-                    cost: 150, 
-                    time: 2 
-                });
+                
+                if (reputation >= 15 && specialChoices.length < 3) {
+                    specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 30, time: 2, className: "fundraising-action" });
+                }
+                
+                if (reputation >= 25 && specialChoices.length < 3) {
+                    specialChoices.push({ id: "recruit_volunteers", text: "Recruit volunteers", cost: 20, time: 1 });
+                }
             }
             
             // Always include "End Adventure" once significant progress is made
-            if (ecosystemHealth > 40 || biodiversityIndex > 35) {
+            if ((ecosystemHealth > 40 || biodiversityIndex > 35) && specialChoices.length < 4) {
                 specialChoices.push({ id: "end_adventure", text: "End Adventure", cost: 0, time: 0 });
             }
             
-            // Return 3-10 choices
-            const allChoices = [...new Set([...specialChoices, ...baseChoices])];
+            // Combine all choices - projects first, then base choices
+            const allChoices = [...specialChoices, ...baseChoices];
+            
+            // Debug: log the choices being generated
+            console.log("Available choices:", allChoices.map(c => c.text));
+            console.log("Current location:", currentLocation);
+            console.log("Unlocked projects:", unlockedProjects[currentLocation]);
+            
+            // Return up to 10 choices
             return allChoices.slice(0, 10);
         };
 
@@ -1406,6 +1351,10 @@ switch(choice.id) {
                 if (ecosystemData.locationsVisited.includes(locationKey)) {
                     setCurrentLocation(locationKey);
                     setStoryLog(prevLog => [...prevLog, `You travel to ${locations[locationKey].name}.`]);
+                    
+                    // Update choices for the new location
+                    const nextChoices = getNextChoices(ecosystemData, locationKey);
+                    setCurrentChoices(nextChoices);
                 }
             };
 
@@ -1441,6 +1390,10 @@ switch(choice.id) {
                     setGameStarted(true);
                     setCurrentLocation(data.currentLocation);
                     setStoryLog([...initialStoryLog, "Game loaded successfully!"]);
+                    
+                    // Update choices for the loaded location
+                    const nextChoices = getNextChoices(data, data.currentLocation);
+                    setCurrentChoices(nextChoices);
                 }
             };
 
@@ -1719,15 +1672,18 @@ Try it yourself at: ${window.location.href}`;
                                     <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                                         <h3 className="text-lg font-medium text-green-700 mb-4">Your Achievements</h3>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                            {achievements.map(achievement => (
-                                                <div key={achievement.id} className={`p-3 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
-                                                    <div className="achievement-badge">
-                                                        {achievement.icon}
-                                                    </div>
-                                                    <h4 className="font-medium text-sm">{achievement.name}</h4>
-                                                    <p className="text-xs text-gray-600">{achievement.description}</p>
-                                                </div>
-                                            ))}
+{achievements.map(achievement => (
+    <div key={achievement.id} className={`p-3 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
+        <div className="achievement-badge">
+            {achievement.icon}
+        </div>
+        <h4 className="font-medium text-sm">{achievement.name}</h4>
+        <p className="text-xs text-gray-600">{achievement.description}</p>
+        {!ecosystemData.achievementsUnlocked.includes(achievement.id) && (
+            <p className="text-xs text-red-500 mt-1">Locked</p>
+        )}
+    </div>
+))}
                                         </div>
                                     </div>
                                 )}
@@ -1762,15 +1718,15 @@ Try it yourself at: ${window.location.href}`;
                                         Settings
                                     </button>
 
-<button 
-    onClick={() => setShowCharts(!showCharts)}
-    className="bg-white hover:bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg transition btn-hover flex items-center"
->
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-    </svg>
-    {showCharts ? 'Hide Charts' : 'Show Charts'}
-</button>
+                                    <button 
+                                        onClick={() => setShowCharts(!showCharts)}
+                                        className="bg-white hover:bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg transition btn-hover flex items-center"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                                        </svg>
+                                        {showCharts ? 'Hide Charts' : 'Show Charts'}
+                                    </button>
                                     
                                     <button 
                                         onClick={() => setShowTutorial(true)}
@@ -1825,14 +1781,14 @@ Try it yourself at: ${window.location.href}`;
                                 </div>
                             )}
 
-{showCharts && (
-    <div className="mb-6 bg-white rounded-xl shadow-md p-4">
-        <EcosystemChart data={ecosystemData.historicalData} />
-        <div className="mt-4">
-            <ClimateChart data={ecosystemData.historicalData} />
-        </div>
-    </div>
-)}
+                            {showCharts && (
+                                <div className="mb-6 bg-white rounded-xl shadow-md p-4">
+                                    <EcosystemChart data={ecosystemData.historicalData} />
+                                    <div className="mt-4">
+                                        <ClimateChart data={ecosystemData.historicalData} />
+                                    </div>
+                                </div>
+                            )}
                             
                             {showTutorial && (
                                 <div className="mb-6 bg-white rounded-xl shadow-md p-6">
@@ -1949,13 +1905,13 @@ Try it yourself at: ${window.location.href}`;
                                                     text-white font-medium py-3 px-4 rounded-lg transition duration-300 transform hover:scale-105 btn-hover flex items-center justify-center`}
                                             >
                                                 {choice.cost > 0 && (
-                                                    <span className="mr-2 bg-green-700 rounded-full px-2 py-1 text-xs">
+                                                    <span className="mr-2 bg-green-500 rounded-full px-2 py-1 text-xs">
                                                         ${choice.cost}
                                                     </span>
                                                 )}
                                                 {choice.text}
                                                 {choice.time > 1 && (
-                                                    <span className="ml-2 bg-green-700 rounded-full px-2 py-1 text-xs">
+                                                    <span className="ml-2 bg-green-500 rounded-full px-2 py-1 text-xs">
                                                         {choice.time}d
                                                     </span>
                                                 )}
@@ -2028,7 +1984,7 @@ Try it yourself at: ${window.location.href}`;
                                         
                                         <div className="flex justify-between items-center mb-2">
                                             <Tooltip text={tooltips.co2Level}>
-                                                <span className="text-gray-600">CO2 Level</span>
+                                                                                                <span className="text-gray-600">CO2 Level</span>
                                             </Tooltip>
                                             <span className="font-semibold">{displayData.co2Level.toFixed(1)} ppm</span>
                                         </div>
@@ -2216,7 +2172,10 @@ Try it yourself at: ${window.location.href}`;
                                                 </button>
                                             </h3>
                                             <div className="grid grid-cols-3 gap-2">
-                                                {achievements.slice(0, 3).map(achievement => (
+{achievements
+  .filter(a => ecosystemData.achievementsUnlocked.includes(a.id))
+  .slice(0, 3)
+  .map(achievement => (
                                                     <div key={achievement.id} className={`p-2 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
                                                         <div className="text-xl">{achievement.icon}</div>
                                                         <p className="text-xs mt-1">{achievement.name}</p>
