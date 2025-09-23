@@ -2031,7 +2031,7 @@ Try it yourself at: ${window.location.href}`;
                                             <Tooltip text={tooltips.ecosystemHealth}>
                                                 <span className="text-gray-600">Overall Health</span>
                                             </Tooltip>
-                                            <span className="font-semibold">{displayData.ecosystemHealth}%</span>
+                                            <span className="font-semibold">{displayData.ecosystemHealth.toFixed(1)}%</span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
                                             <div 
@@ -2044,7 +2044,7 @@ Try it yourself at: ${window.location.href}`;
                                             <Tooltip text={tooltips.biodiversityIndex}>
                                                 <span className="text-gray-600">Biodiversity</span>
                                             </Tooltip>
-                                            <span className="font-semibold">{displayData.biodiversityIndex}%</span>
+                                            <span className="font-semibold">{displayData.biodiversityIndex.toFixed(1)}%</span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
                                             <div 
@@ -2057,7 +2057,7 @@ Try it yourself at: ${window.location.href}`;
                                             <Tooltip text={tooltips.waterQuality}>
                                                 <span className="text-gray-600">Water Quality</span>
                                             </Tooltip>
-                                            <span className="font-semibold">{displayData.waterQuality}%</span>
+                                            <span className="font-semibold">{displayData.waterQuality.toFixed(1)}%</span>
                                         </div>
                                         <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
                                             <div 
