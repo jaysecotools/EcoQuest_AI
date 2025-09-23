@@ -82,13 +82,19 @@
             height: 200px;
             overflow-y: auto;
         }
-        .policy-card {
-            transition: all 0.3s ease;
-        }
-        .policy-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
+.policy-card {
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    color: #1e293b; /* dark blue-gray for contrast */
+    border: 1px solid #6366f1; /* indigo border */
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+.policy-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%);
+}
         .climate-event {
             animation: climatePulse 3s ease;
         }
@@ -932,6 +938,23 @@ if (
     });
 }
 
+// Add available policies as choices if not already enacted and budget allows
+policyOptions.forEach(policy => {
+    if (
+        !ecosystemData.policiesEnacted.includes(policy.id) && // Policy not enacted yet
+        budget >= policy.cost * costMultiplier // Can afford it
+    ) {
+        specialChoices.push({
+            id: "enact_policy",
+            text: `Enact Policy: ${policy.name}`,
+            cost: policy.cost,
+            time: 2,
+            policyId: policy.id,
+            className: "policy-card"
+        });
+    }
+});
+            
             // Add available projects for current location
             if (unlockedProjects && unlockedProjects[currentLocation] && unlockedProjects[currentLocation].length > 0) {
                 locations[currentLocation].projects.forEach(project => {
