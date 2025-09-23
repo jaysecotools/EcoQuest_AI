@@ -121,8 +121,8 @@
         .location-unlocked {
             animation: pulse 2s infinite;
             border: 2px solid #10b981 !important;
-            background-color: #d1fae5 !important; /* Light green background */
-            color: #065f46 !important; /* Dark green text */
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
         }
         .tooltip {
             position: relative;
@@ -229,21 +229,21 @@
             "The Tasmanian wedge-tailed eagle has a wingspan of up to 2.3 meters."
         ];
 
-        // Achievement system
-const achievements = [
-	{ id: "first_tree", name: "First Tree Planted", description: "Plant your first native tree", icon: "🌱", condition: (data) => data.treesPlanted >= 1 },
-	{ id: "five_species", name: "Wildlife Observer", description: "Observe 5 different species", icon: "🐾", condition: (data) => data.wildlifeObserved.length >= 5 },
-    { id: "health_75", name: "Ecosystem Steward", description: "Reach 75% ecosystem health", icon: "💚", condition: (data) => data.ecosystemHealth >= 75 },
-    { id: "all_locations", name: "Explorer", description: "Discover all locations", icon: "🗺️", condition: (data) => data.locationsVisited.length >= Object.keys(locations).length },
-    { id: "water_quality", name: "Water Guardian", description: "Achieve 80% water quality", icon: "💧", condition: (data) => data.waterQuality >= 80 },
-    { id: "carbon_100", name: "Carbon Champion", description: "Sequester 100 tons of carbon", icon: "🌍", condition: (data) => data.carbonSequestration >= 100 },
-    { id: "volunteers_10", name: "Community Leader", description: "Recruit 10 volunteers", icon: "👥", condition: (data) => data.volunteers >= 10 },
-	{ id: "all_projects", name: "Project Manager", description: "Complete all projects in one location", icon: "✅", condition: (data) => {
-return Object.values(data.unlockedProjects).some(projects => projects && projects.length === 0);
-}},
-    { id: "budget_5000", name: "Financial Manager", description: "Accumulate $5000 budget", icon: "💰", condition: (data) => data.budget >= 5000 },
-    { id: "all_achievements", name: "Master Conservationist", description: "Unlock all achievements", icon: "🏆", condition: (data, achieved) => achieved.length >= achievements.length }
-];
+        // Achievement system - FIXED: Corrected all_projects achievement condition
+        const achievements = [
+            { id: "first_tree", name: "First Tree Planted", description: "Plant your first native tree", icon: "🌱", condition: (data) => data.treesPlanted >= 1 },
+            { id: "five_species", name: "Wildlife Observer", description: "Observe 5 different species", icon: "🐾", condition: (data) => data.wildlifeObserved.length >= 5 },
+            { id: "health_75", name: "Ecosystem Steward", description: "Reach 75% ecosystem health", icon: "💚", condition: (data) => data.ecosystemHealth >= 75 },
+            { id: "all_locations", name: "Explorer", description: "Discover all locations", icon: "🗺️", condition: (data) => data.locationsVisited.length >= Object.keys(locations).length },
+            { id: "water_quality", name: "Water Guardian", description: "Achieve 80% water quality", icon: "💧", condition: (data) => data.waterQuality >= 80 },
+            { id: "carbon_100", name: "Carbon Champion", description: "Sequester 100 tons of carbon", icon: "🌍", condition: (data) => data.carbonSequestration >= 100 },
+            { id: "volunteers_10", name: "Community Leader", description: "Recruit 10 volunteers", icon: "👥", condition: (data) => data.volunteers >= 10 },
+            { id: "all_projects", name: "Project Manager", description: "Complete all projects in one location", icon: "✅", condition: (data) => {
+                return Object.values(data.unlockedProjects || {}).some(projects => projects && projects.length === 0);
+            }},
+            { id: "budget_5000", name: "Financial Manager", description: "Accumulate $5000 budget", icon: "💰", condition: (data) => data.budget >= 5000 },
+            { id: "all_achievements", name: "Master Conservationist", description: "Unlock all achievements", icon: "🏆", condition: (data, achieved) => (achieved || data.achievementsUnlocked || []).length >= achievements.length - 1 }
+        ];
 
         // Challenge modes
         const challengeModes = {
@@ -264,9 +264,9 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
                 coordinates: [-41.2, 145.0],
                 biome: "temperate_rainforest",
                 projects: [
-                    { id: "plant_trees_tarkine", name: "Reforestation Program", cost: 120, effect: "Plant native trees to restore canopy cover", healthImpact: 10, biodiversityImpact: 8, waterImpact: 3 }, // Reduced cost
-                    { id: "devil_tracking", name: "Devil Tracking Program", cost: 160, effect: "Monitor Tasmanian devil populations", healthImpact: 5, biodiversityImpact: 10 }, // Reduced cost
-                    { id: "water_monitoring", name: "Water Quality Monitoring", cost: 80, effect: "Establish water quality monitoring stations", healthImpact: 3, waterImpact: 8 } // Reduced cost
+                    { id: "plant_trees_tarkine", name: "Reforestation Program", cost: 120, effect: "Plant native trees to restore canopy cover", healthImpact: 10, biodiversityImpact: 8, waterImpact: 3 },
+                    { id: "devil_tracking", name: "Devil Tracking Program", cost: 160, effect: "Monitor Tasmanian devil populations", healthImpact: 5, biodiversityImpact: 10 },
+                    { id: "water_monitoring", name: "Water Quality Monitoring", cost: 80, effect: "Establish water quality monitoring stations", healthImpact: 3, waterImpact: 8 }
                 ]
             },
             cradle_mountain: {
@@ -278,9 +278,9 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
                 coordinates: [-41.65, 145.95],
                 biome: "alpine",
                 projects: [
-                    { id: "alpine_restoration", name: "Alpine Vegetation Restoration", cost: 150, effect: "Restore fragile alpine plant communities", healthImpact: 12, biodiversityImpact: 10 }, // Reduced cost
-                    { id: "visitor_education", name: "Visitor Education Program", cost: 100, effect: "Educate tourists about conservation", healthImpact: 6, reputationImpact: 8 }, // Reduced cost
-                    { id: "feral_control", name: "Feral Animal Control", cost: 200, effect: "Control feral cats and foxes", healthImpact: 8, biodiversityImpact: 12 } // Reduced cost
+                    { id: "alpine_restoration", name: "Alpine Vegetation Restoration", cost: 150, effect: "Restore fragile alpine plant communities", healthImpact: 12, biodiversityImpact: 10 },
+                    { id: "visitor_education", name: "Visitor Education Program", cost: 100, effect: "Educate tourists about conservation", healthImpact: 6, reputationImpact: 8 },
+                    { id: "feral_control", name: "Feral Animal Control", cost: 200, effect: "Control feral cats and foxes", healthImpact: 8, biodiversityImpact: 12 }
                 ]
             },
             freycinet: {
@@ -292,9 +292,9 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
                 coordinates: [-42.13, 148.3],
                 biome: "coastal",
                 projects: [
-                    { id: "coastal_rehab", name: "Coastal Rehabilitation", cost: 140, effect: "Stabilize dunes and restore coastal vegetation", healthImpact: 10, biodiversityImpact: 7, waterImpact: 5 }, // Reduced cost
-                    { id: "bird_monitoring", name: "Shorebird Monitoring", cost: 110, effect: "Monitor migratory shorebird populations", healthImpact: 4, biodiversityImpact: 9 }, // Reduced cost
-                    { id: "marine_debris", name: "Marine Debris Cleanup", cost: 70, effect: "Remove plastic and debris from beaches", healthImpact: 6, waterImpact: 8 } // Reduced cost
+                    { id: "coastal_rehab", name: "Coastal Rehabilitation", cost: 140, effect: "Stabilize dunes and restore coastal vegetation", healthImpact: 10, biodiversityImpact: 7, waterImpact: 5 },
+                    { id: "bird_monitoring", name: "Shorebird Monitoring", cost: 110, effect: "Monitor migratory shorebird populations", healthImpact: 4, biodiversityImpact: 9 },
+                    { id: "marine_debris", name: "Marine Debris Cleanup", cost: 70, effect: "Remove plastic and debris from beaches", healthImpact: 6, waterImpact: 8 }
                 ]
             },
             maria_island: {
@@ -306,9 +306,9 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
                 coordinates: [-42.63, 148.0],
                 biome: "island",
                 projects: [
-                    { id: "species_reintroduction", name: "Species Reintroduction", cost: 250, effect: "Reintroduce native species to the island", healthImpact: 15, biodiversityImpact: 20 }, // Reduced cost
-                    { id: "erosion_control", name: "Erosion Control", cost: 130, effect: "Stabilize soil and prevent erosion", healthImpact: 10, waterImpact: 7 }, // Reduced cost
-                    { id: "invasive_removal", name: "Invasive Species Removal", cost: 150, effect: "Remove invasive plants and animals", healthImpact: 12, biodiversityImpact: 15 } // Reduced cost
+                    { id: "species_reintroduction", name: "Species Reintroduction", cost: 250, effect: "Reintroduce native species to the island", healthImpact: 15, biodiversityImpact: 20 },
+                    { id: "erosion_control", name: "Erosion Control", cost: 130, effect: "Stabilize soil and prevent erosion", healthImpact: 10, waterImpact: 7 },
+                    { id: "invasive_removal", name: "Invasive Species Removal", cost: 150, effect: "Remove invasive plants and animals", healthImpact: 12, biodiversityImpact: 15 }
                 ]
             },
             macquarie_harbor: {
@@ -320,14 +320,14 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
                 coordinates: [-42.3, 145.3],
                 biome: "harbour",
                 projects: [
-                    { id: "harbour_restoration", name: "Harbour Restoration", cost: 180, effect: "Restore degraded harbour areas", healthImpact: 12, waterImpact: 15, biodiversityImpact: 10 }, // Reduced cost
-                    { id: "water_quality", name: "Water Quality Improvement", cost: 150, effect: "Improve water quality through filtration", healthImpact: 8, waterImpact: 18 }, // Reduced cost
-                    { id: "Maugean_skate_conservation", name: "Maugean skate Conservation", cost: 120, effect: "Protect endangered Maugean skate habitat", healthImpact: 7, biodiversityImpact: 12 } // Reduced cost
+                    { id: "harbour_restoration", name: "Harbour Restoration", cost: 180, effect: "Restore degraded harbour areas", healthImpact: 12, waterImpact: 15, biodiversityImpact: 10 },
+                    { id: "water_quality", name: "Water Quality Improvement", cost: 150, effect: "Improve water quality through filtration", healthImpact: 8, waterImpact: 18 },
+                    { id: "Maugean_skate_conservation", name: "Maugean skate Conservation", cost: 120, effect: "Protect endangered Maugean skate habitat", healthImpact: 7, biodiversityImpact: 12 }
                 ]
             }
         };
 
-        // Enhanced ecosystem data with more metrics
+        // Enhanced ecosystem data with more metrics - FIXED: Added proper storyLog initialization
         const initialEcosystemData = {
             shrubsPlanted: 0,
             treesPlanted: 0,
@@ -359,14 +359,12 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
             },
             achievementsUnlocked: [],
             challengeMode: 'normal',
-            tutorialStep: 0
+            tutorialStep: 0,
+            storyLog: [
+                "🌿 Welcome to EcoQuest: Tasmania! Your mission is to restore balance to Tasmania's unique ecosystems.",
+                "You arrive in the Tarkine rainforest, one of the last temperate rainforests in the world with ancient myrtle trees and lush ferns."
+            ]
         };
-
-        // Expanded story elements with Tasmania focus
-        const initialStoryLog = [
-            "🌿 Welcome to EcoQuest: Tasmania! Your mission is to restore balance to Tasmania's unique ecosystems.",
-            "You arrive in the Tarkine rainforest, one of the last temperate rainforests in the world with ancient myrtle trees and lush ferns."
-        ];
 
         // Tutorial steps
         const tutorialSteps = [
@@ -379,8 +377,8 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
 
         // More diverse initial choices
         const initialChoices = [
-            { id: "plant_shrubs", text: "Plant native shrubs", cost: 40, time: 1 }, // Reduced cost for balance
-            { id: "remove_weeds", text: "Remove invasive species", cost: 15, time: 1 }, // Reduced cost for balance
+            { id: "plant_shrubs", text: "Plant native shrubs", cost: 40, time: 1 },
+            { id: "remove_weeds", text: "Remove invasive species", cost: 15, time: 1 },
             { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
             { id: "explore", text: "Explore nearby areas", cost: 0, time: 1, className: "bg-blue-100 border-blue-300" }
         ];
@@ -558,7 +556,7 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
             return response;
         };
 
-        // More sophisticated ecosystem update function
+        // More sophisticated ecosystem update function - FIXED: Proper storyLog handling
         const updateEcosystem = (choice, ecosystemData, currentLocation) => {
             const updatedData = { ...ecosystemData };
             const locationData = locations[currentLocation];
@@ -568,6 +566,11 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
             const costMultiplier = challengeMode.costMultiplier || 1;
             const budgetMultiplier = challengeMode.budgetMultiplier || 1;
             const eventFrequencyMultiplier = challengeMode.eventFrequency || 1;
+            
+            // Ensure storyLog exists
+            if (!updatedData.storyLog) {
+                updatedData.storyLog = [...initialEcosystemData.storyLog];
+            }
             
             // Update based on action
             switch(choice.id) {
@@ -593,25 +596,25 @@ return Object.values(data.unlockedProjects).some(projects => projects && project
                     updatedData.waterQuality += 1;
                     updatedData.budget -= choice.cost * costMultiplier;
                     break;
-case "observe_wildlife":
-    // Random chance to discover new wildlife based on biodiversity
-    if (Math.random() < updatedData.biodiversityIndex / 100 && 
-        updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
-        const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
-            species => !updatedData.wildlifeObserved.includes(species) && 
-            tasmaniaWildlife[species].habitat === locationData.biome
-        );
-        if (possibleNewSpecies.length > 0) {
-            const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
-            updatedData.wildlifeObserved.push(newSpecies);
-            updatedData.biodiversityIndex += 2;
-            
-            // Add notification to story log
-            updatedData.storyLog.push(`🦘 You discovered a ${tasmaniaWildlife[newSpecies].name}!`);
-        }
-    }
-    updatedData.ecosystemHealth += 1;
-    break;
+                case "observe_wildlife":
+                    // Random chance to discover new wildlife based on biodiversity
+                    if (Math.random() < updatedData.biodiversityIndex / 100 && 
+                        updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
+                        const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
+                            species => !updatedData.wildlifeObserved.includes(species) && 
+                            tasmaniaWildlife[species].habitat === locationData.biome
+                        );
+                        if (possibleNewSpecies.length > 0) {
+                            const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
+                            updatedData.wildlifeObserved.push(newSpecies);
+                            updatedData.biodiversityIndex += 2;
+                            
+                            // Add notification to story log
+                            updatedData.storyLog.push(`🦘 You discovered a ${tasmaniaWildlife[newSpecies].name}!`);
+                        }
+                    }
+                    updatedData.ecosystemHealth += 1;
+                    break;
                 case "explore":
                     // Explore new locations
                     const unexploredLocations = Object.keys(locations).filter(
@@ -872,28 +875,28 @@ case "observe_wildlife":
                 });
             }
             
-// Check for achievements
-achievements.forEach(achievement => {
-    if (!updatedData.achievementsUnlocked.includes(achievement.id) && 
-        achievement.condition(updatedData, updatedData.achievementsUnlocked)) {
-        updatedData.achievementsUnlocked.push(achievement.id);
-        // Add achievement notification to story log
-        updatedData.storyLog = updatedData.storyLog || [];
-        updatedData.storyLog.push(`🎉 Achievement Unlocked: ${achievement.name}! ${achievement.description}`);
-    }
-});
+            // Check for achievements - FIXED: Proper achievement checking
+            achievements.forEach(achievement => {
+                if (!updatedData.achievementsUnlocked.includes(achievement.id) && 
+                    achievement.condition(updatedData, updatedData.achievementsUnlocked)) {
+                    updatedData.achievementsUnlocked.push(achievement.id);
+                    // Ensure storyLog exists before pushing
+                    if (!updatedData.storyLog) updatedData.storyLog = [];
+                    updatedData.storyLog.push(`🎉 Achievement Unlocked: ${achievement.name}! ${achievement.description}`);
+                }
+            });
             
             // Random Tasmania fact popup (5% chance)
             if (Math.random() < 0.05) {
                 const randomFact = tasmaniaFacts[Math.floor(Math.random() * tasmaniaFacts.length)];
-                updatedData.storyLog = updatedData.storyLog || [];
+                if (!updatedData.storyLog) updatedData.storyLog = [];
                 updatedData.storyLog.push(`💡 Tasmania Fact: ${randomFact}`);
             }
             
             return updatedData;
         };
 
-        // More dynamic choice generation - FIXED VERSION
+        // More dynamic choice generation - FIXED: Improved choice generation logic
         const getNextChoices = (ecosystemData, currentLocation) => {
             const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam, unlockedProjects } = ecosystemData;
             const challengeMode = challengeModes[ecosystemData.challengeMode];
@@ -906,8 +909,8 @@ achievements.forEach(achievement => {
             
             const specialChoices = [];
             
-            // FIRST: Add available projects for current location (PRIORITY)
-            if (unlockedProjects[currentLocation] && unlockedProjects[currentLocation].length > 0) {
+            // Add available projects for current location
+            if (unlockedProjects && unlockedProjects[currentLocation] && unlockedProjects[currentLocation].length > 0) {
                 locations[currentLocation].projects.forEach(project => {
                     if (unlockedProjects[currentLocation].includes(project.id) && budget >= project.cost * costMultiplier) {
                         specialChoices.push({
@@ -922,49 +925,43 @@ achievements.forEach(achievement => {
                 });
             }
             
-            // THEN: Add other actions (only if we have space)
-            if (budget >= 50 * costMultiplier && specialChoices.length < 3) {
+            // Add other actions based on budget and conditions
+            if (budget >= 50 * costMultiplier) {
                 specialChoices.push({ id: "plant_shrubs", text: "Plant native shrubs", cost: 50, time: 1 });
             }
             
-            if (budget >= 20 * costMultiplier && specialChoices.length < 3) {
+            if (budget >= 20 * costMultiplier) {
                 specialChoices.push({ id: "remove_weeds", text: "Remove invasive species", cost: 20, time: 1 });
             }
             
-            if (budget >= 100 * costMultiplier && specialChoices.length < 3) {
+            if (budget >= 100 * costMultiplier) {
                 specialChoices.push({ id: "plant_trees", text: "Plant native trees", cost: 100, time: 2, className: "tree-planting-action" });
             }
             
-            // Add a few more essential actions if we still have space
-            if (specialChoices.length < 3) {
-                if (locationsVisited.includes('macquarie_harbor')) {
-                    specialChoices.push({ id: "check_harbour", text: "Monitor harbour health", cost: 0, time: 1, className: "water-quality-action" });
-                }
-                
-                if (reputation >= 15 && specialChoices.length < 3) {
-                    specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 30, time: 2, className: "fundraising-action" });
-                }
-                
-                if (reputation >= 25 && specialChoices.length < 3) {
-                    specialChoices.push({ id: "recruit_volunteers", text: "Recruit volunteers", cost: 20, time: 1 });
-                }
+            // Add location-specific actions
+            if (locationsVisited.includes('macquarie_harbor')) {
+                specialChoices.push({ id: "check_harbour", text: "Monitor harbour health", cost: 0, time: 1, className: "water-quality-action" });
+            }
+            
+            // Add fundraising and volunteer actions based on reputation
+            if (reputation >= 15) {
+                specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 30, time: 2, className: "fundraising-action" });
+            }
+            
+            if (reputation >= 25) {
+                specialChoices.push({ id: "recruit_volunteers", text: "Recruit volunteers", cost: 20, time: 1 });
             }
             
             // Always include "End Adventure" once significant progress is made
-            if ((ecosystemHealth > 40 || biodiversityIndex > 35) && specialChoices.length < 4) {
+            if ((ecosystemHealth > 40 || biodiversityIndex > 35)) {
                 specialChoices.push({ id: "end_adventure", text: "End Adventure", cost: 0, time: 0 });
             }
             
-            // Combine all choices - projects first, then base choices
+            // Combine all choices - special choices first, then base choices
             const allChoices = [...specialChoices, ...baseChoices];
             
-            // Debug: log the choices being generated
-            console.log("Available choices:", allChoices.map(c => c.text));
-            console.log("Current location:", currentLocation);
-            console.log("Unlocked projects:", unlockedProjects[currentLocation]);
-            
-            // Return up to 10 choices
-            return allChoices.slice(0, 10);
+            // Return up to 6 choices for better UI
+            return allChoices.slice(0, 6);
         };
 
         // Map component for location visualization
@@ -993,7 +990,9 @@ achievements.forEach(achievement => {
                     
                     // Clear existing markers
                     Object.values(markersRef.current).forEach(marker => {
-                        mapInstance.current.removeLayer(marker);
+                        if (mapInstance.current && marker) {
+                            mapInstance.current.removeLayer(marker);
+                        }
                     });
                     markersRef.current = {};
                     
@@ -1254,7 +1253,7 @@ achievements.forEach(achievement => {
             const [gameModeSelected, setGameModeSelected] = useState(false);
             const [gameCompleted, setGameCompleted] = useState(false);
             const [gameCompletedReason, setGameCompletedReason] = useState("");
-            const [storyLog, setStoryLog] = useState(initialStoryLog);
+            const [storyLog, setStoryLog] = useState(initialEcosystemData.storyLog);
             const [ecosystemData, setEcosystemData] = useState(() => {
                 // Load saved game data from localStorage if available
                 const savedData = localStorage.getItem('ecoQuestSaveData');
@@ -1309,6 +1308,7 @@ achievements.forEach(achievement => {
             const handleChoice = (choice) => {
                 if (choice.id === "end_adventure") {
                     setGameCompleted(true);
+                    setGameCompletedReason("Adventure Completed Successfully!");
                     return;
                 }
                 
@@ -1319,8 +1319,8 @@ achievements.forEach(achievement => {
                 const updatedEcosystem = updateEcosystem(choice, ecosystemData, currentLocation);
                 setEcosystemData(updatedEcosystem);
                 
-                // Update story log
-                setStoryLog(prevLog => [...prevLog, `> ${choice.text}`, response]);
+                // Update story log - use the storyLog from updated ecosystem data
+                setStoryLog(updatedEcosystem.storyLog || []);
                 
                 // Determine next choices
                 const nextChoices = getNextChoices(updatedEcosystem, currentLocation);
@@ -1372,7 +1372,7 @@ achievements.forEach(achievement => {
                 setGameModeSelected(false);
                 setGameCompleted(false);
                 setGameCompletedReason("");
-                setStoryLog(initialStoryLog);
+                setStoryLog(initialEcosystemData.storyLog);
                 setEcosystemData(initialEcosystemData);
                 setCurrentChoices(initialChoices);
                 setCurrentLocation('tarkine_forest');
@@ -1389,7 +1389,7 @@ achievements.forEach(achievement => {
                     setGameModeSelected(true);
                     setGameStarted(true);
                     setCurrentLocation(data.currentLocation);
-                    setStoryLog([...initialStoryLog, "Game loaded successfully!"]);
+                    setStoryLog(data.storyLog || initialEcosystemData.storyLog);
                     
                     // Update choices for the loaded location
                     const nextChoices = getNextChoices(data, data.currentLocation);
@@ -1672,18 +1672,18 @@ Try it yourself at: ${window.location.href}`;
                                     <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                                         <h3 className="text-lg font-medium text-green-700 mb-4">Your Achievements</h3>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-{achievements.map(achievement => (
-    <div key={achievement.id} className={`p-3 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
-        <div className="achievement-badge">
-            {achievement.icon}
-        </div>
-        <h4 className="font-medium text-sm">{achievement.name}</h4>
-        <p className="text-xs text-gray-600">{achievement.description}</p>
-        {!ecosystemData.achievementsUnlocked.includes(achievement.id) && (
-            <p className="text-xs text-red-500 mt-1">Locked</p>
-        )}
-    </div>
-))}
+                                            {achievements.map(achievement => (
+                                                <div key={achievement.id} className={`p-3 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
+                                                    <div className="achievement-badge">
+                                                        {achievement.icon}
+                                                    </div>
+                                                    <h4 className="font-medium text-sm">{achievement.name}</h4>
+                                                    <p className="text-xs text-gray-600">{achievement.description}</p>
+                                                    {!ecosystemData.achievementsUnlocked.includes(achievement.id) && (
+                                                        <p className="text-xs text-red-500 mt-1">Locked</p>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
@@ -1826,12 +1826,25 @@ Try it yourself at: ${window.location.href}`;
                                     </div>
                                     
                                     <div className="flex justify-end">
-                                        <button 
-                                            onClick={() => setShowTutorial(false)}
-                                            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition"
-                                        >
-                                            Close Tutorial
-                                        </button>
+                                        <div className="flex space-x-2">
+                                            <a 
+                                                href="USER_GUIDE.md" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition flex items-center"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+                                                </svg>
+                                                View Full Guide
+                                            </a>
+                                            <button 
+                                                onClick={() => setShowTutorial(false)}
+                                                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition"
+                                            >
+                                                Close Tutorial
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -1984,7 +1997,7 @@ Try it yourself at: ${window.location.href}`;
                                         
                                         <div className="flex justify-between items-center mb-2">
                                             <Tooltip text={tooltips.co2Level}>
-                                                                                                <span className="text-gray-600">CO2 Level</span>
+                                                <span className="text-gray-600">CO2 Level</span>
                                             </Tooltip>
                                             <span className="font-semibold">{displayData.co2Level.toFixed(1)} ppm</span>
                                         </div>
@@ -2093,7 +2106,7 @@ Try it yourself at: ${window.location.href}`;
                                         </div>
                                         
                                         {/* Location Projects */}
-                                        {displayData.unlockedProjects[currentLocation] && displayData.unlockedProjects[currentLocation].length > 0 && (
+                                        {displayData.unlockedProjects && displayData.unlockedProjects[currentLocation] && displayData.unlockedProjects[currentLocation].length > 0 && (
                                             <div>
                                                 <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -2172,15 +2185,15 @@ Try it yourself at: ${window.location.href}`;
                                                 </button>
                                             </h3>
                                             <div className="grid grid-cols-3 gap-2">
-{achievements
-  .filter(a => ecosystemData.achievementsUnlocked.includes(a.id))
-  .slice(0, 3)
-  .map(achievement => (
-                                                    <div key={achievement.id} className={`p-2 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
-                                                        <div className="text-xl">{achievement.icon}</div>
-                                                        <p className="text-xs mt-1">{achievement.name}</p>
-                                                    </div>
-                                                ))}
+                                                {achievements
+                                                    .filter(a => ecosystemData.achievementsUnlocked.includes(a.id))
+                                                    .slice(0, 3)
+                                                    .map(achievement => (
+                                                        <div key={achievement.id} className={`p-2 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
+                                                            <div className="text-xl">{achievement.icon}</div>
+                                                            <p className="text-xs mt-1">{achievement.name}</p>
+                                                        </div>
+                                                    ))}
                                             </div>
                                         </div>
                                     </div>
@@ -2218,16 +2231,20 @@ Try it yourself at: ${window.location.href}`;
             );
         }
 
-        // Render the app
-        const appContainer = document.getElementById('root');
-        if (ReactDOM.createRoot) {
-            // React 18+
-            const root = ReactDOM.createRoot(appContainer);
-            root.render(<EcoQuest />);
-        } else {
-            // React 17 and earlier
-            ReactDOM.render(<EcoQuest />, appContainer);
-        }
+// Render the app - ALTERNATIVE FIX
+const appContainer = document.getElementById('root');
+try {
+    // Try React 18 approach first
+    if (ReactDOM.createRoot) {
+        const root = ReactDOM.createRoot(appContainer);
+        root.render(<EcoQuest />);
+    } else {
+        throw new Error('Use React 17 method');
+    }
+} catch (error) {
+    // Fallback to React 17 method
+    ReactDOM.render(<EcoQuest />, appContainer);
+}
     </script>
 </body>
 </html>
