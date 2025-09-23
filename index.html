@@ -596,25 +596,25 @@
                     updatedData.waterQuality += 1;
                     updatedData.budget -= choice.cost * costMultiplier;
                     break;
-                case "observe_wildlife":
-                    // Random chance to discover new wildlife based on biodiversity
-                    if (Math.random() < updatedData.biodiversityIndex / 100 && 
-                        updatedData.wildlifeObserved.length < Object.keys(tasmaniaWildlife).length) {
-                        const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(
-                            species => !updatedData.wildlifeObserved.includes(species) && 
-                            tasmaniaWildlife[species].habitat === locationData.biome
-                        );
-                        if (possibleNewSpecies.length > 0) {
-                            const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
-                            updatedData.wildlifeObserved.push(newSpecies);
-                            updatedData.biodiversityIndex += 2;
-                            
-                            // Add notification to story log
-                            updatedData.storyLog.push(`🦘 You discovered a ${tasmaniaWildlife[newSpecies].name}!`);
-                        }
-                    }
-                    updatedData.ecosystemHealth += 1;
-                    break;
+// ... inside updateEcosystem, in the "observe_wildlife" case ...
+case "observe_wildlife":
+    // Improved: Allow "forest" species in forest biomes, "varied" everywhere
+    const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(species => {
+        if (updatedData.wildlifeObserved.includes(species)) return false;
+        const habitat = tasmaniaWildlife[species].habitat;
+        if (habitat === "varied") return true;
+        if (habitat === "forest" && locationData.biome.includes("forest")) return true;
+        return habitat === locationData.biome;
+    });
+    if (Math.random() < updatedData.biodiversityIndex / 100 && possibleNewSpecies.length > 0) {
+        const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
+        updatedData.wildlifeObserved.push(newSpecies);
+        updatedData.biodiversityIndex += 2;
+        if (!updatedData.storyLog) updatedData.storyLog = [];
+        updatedData.storyLog.push(`🦘 You discovered a ${tasmaniaWildlife[newSpecies].name}!`);
+    }
+    updatedData.ecosystemHealth += 1;
+    break;
                 case "explore":
                     // Explore new locations
                     const unexploredLocations = Object.keys(locations).filter(
@@ -901,6 +901,8 @@ achievements.forEach(achievement => {
             const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam, unlockedProjects } = ecosystemData;
             const challengeMode = challengeModes[ecosystemData.challengeMode];
             const costMultiplier = challengeMode.costMultiplier || 1;
+            const budgetMultiplier = challengeMode.budgetMultiplier || 1;
+            const eventFrequencyMultiplier = challengeMode.eventFrequency || 1;
             
             const baseChoices = [
                 { id: "observe_wildlife", text: "Observe wildlife", cost: 0, time: 1 },
@@ -958,10 +960,10 @@ if (
             if (budget >= 100 * costMultiplier) {
                 specialChoices.push({ id: "plant_trees", text: "Plant native trees", cost: 100, time: 2, className: "tree-planting-action" });
             }
-            
-            // Add location-specific actions
-            if (locationsVisited.includes('macquarie_harbor')) {
-                specialChoices.push({ id: "check_harbour", text: "Monitor harbour health", cost: 0, time: 1, className: "water-quality-action" });
+
+                // Only show harbour actions if currently at Macquarie Harbor
+if (currentLocation === 'macquarie_harbor') {
+    specialChoices.push({ id: "check_harbour", text: "Monitor harbour health", cost: 0, time: 1, className: "water-quality-action" });
             }
             
             // Add fundraising and volunteer actions based on reputation
@@ -1290,6 +1292,7 @@ if (
             const [showSettings, setShowSettings] = useState(false);
             const [replayDay, setReplayDay] = useState(null);
             const [showShareModal, setShowShareModal] = useState(false);
+            const [showAllAchievements, setShowAllAchievements] = useState(true); // NEW STATE
 
             // Save game data to localStorage whenever it changes
             useEffect(() => {
@@ -1462,6 +1465,7 @@ const getActionDescription = (choice, currentLocation) => {
                 setCurrentLocation('tarkine_forest');
                 setWeatherData(null);
                 setReplayDay(null);
+                setShowAllAchievements(true); // Reset toggle state
                 localStorage.removeItem('ecoQuestSaveData');
             };
 
@@ -1754,20 +1758,33 @@ Try it yourself at: ${window.location.href}`;
                                 
                                 {showAchievements && (
                                     <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                                        <h3 className="text-lg font-medium text-green-700 mb-4">Your Achievements</h3>
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-lg font-medium text-green-700">Your Achievements</h3>
+                                            <div className="flex items-center space-x-2">
+                                                <span className="text-sm text-gray-600">{showAllAchievements ? 'Showing All' : 'Achieved Only'}</span>
+                                                <button 
+                                                    onClick={() => setShowAllAchievements(!showAllAchievements)}
+                                                    className="text-sm bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1 rounded transition"
+                                                >
+                                                    {showAllAchievements ? 'Show Achieved Only' : 'Show All'}
+                                                </button>
+                                            </div>
+                                        </div>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                            {achievements.map(achievement => (
-                                                <div key={achievement.id} className={`p-3 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
-                                                    <div className="achievement-badge">
-                                                        {achievement.icon}
+                                            {achievements
+                                                .filter(a => showAllAchievements || ecosystemData.achievementsUnlocked.includes(a.id))
+                                                .map(achievement => (
+                                                    <div key={achievement.id} className={`p-3 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
+                                                        <div className="achievement-badge">
+                                                            {achievement.icon}
+                                                        </div>
+                                                        <h4 className="font-medium text-sm">{achievement.name}</h4>
+                                                        <p className="text-xs text-gray-600">{achievement.description}</p>
+                                                        {!ecosystemData.achievementsUnlocked.includes(achievement.id) && (
+                                                            <p className="text-xs text-red-500 mt-1">Locked</p>
+                                                        )}
                                                     </div>
-                                                    <h4 className="font-medium text-sm">{achievement.name}</h4>
-                                                    <p className="text-xs text-gray-600">{achievement.description}</p>
-                                                    {!ecosystemData.achievementsUnlocked.includes(achievement.id) && (
-                                                        <p className="text-xs text-red-500 mt-1">Locked</p>
-                                                    )}
-                                                </div>
-                                            ))}
+                                                ))}
                                         </div>
                                     </div>
                                 )}
@@ -2261,17 +2278,19 @@ Try it yourself at: ${window.location.href}`;
                                         <div>
                                             <h3 className="text-lg font-medium text-green-700 mb-2 flex items-center justify-between">
                                                 <span>Achievements</span>
-                                                <button 
-                                                    onClick={() => setShowAchievements(!showAchievements)}
-                                                    className="text-sm text-green-600 hover:text-green-800"
-                                                >
-                                                    {showAchievements ? 'Hide' : 'Show All'}
-                                                </button>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="text-xs text-gray-600">{showAllAchievements ? 'All' : 'Achieved'}</span>
+                                                    <button 
+                                                        onClick={() => setShowAllAchievements(!showAllAchievements)}
+                                                        className="text-sm bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded transition"
+                                                    >
+                                                        {showAllAchievements ? 'Achieved Only' : 'Show All'}
+                                                    </button>
+                                                </div>
                                             </h3>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {achievements
-                                                    .filter(a => ecosystemData.achievementsUnlocked.includes(a.id))
-                                                    .slice(0, 3)
+                                                    .filter(a => showAllAchievements || ecosystemData.achievementsUnlocked.includes(a.id))
                                                     .map(achievement => (
                                                         <div key={achievement.id} className={`p-2 rounded-lg text-center ${ecosystemData.achievementsUnlocked.includes(achievement.id) ? 'bg-green-100 border border-green-300' : 'bg-gray-100 opacity-50'}`}>
                                                             <div className="text-xl">{achievement.icon}</div>
