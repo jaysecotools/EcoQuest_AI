@@ -875,16 +875,16 @@
                 });
             }
             
-            // Check for achievements - FIXED: Proper achievement checking
-            achievements.forEach(achievement => {
-                if (!updatedData.achievementsUnlocked.includes(achievement.id) && 
-                    achievement.condition(updatedData, updatedData.achievementsUnlocked)) {
-                    updatedData.achievementsUnlocked.push(achievement.id);
-                    // Ensure storyLog exists before pushing
-                    if (!updatedData.storyLog) updatedData.storyLog = [];
-                    updatedData.storyLog.push(`🎉 Achievement Unlocked: ${achievement.name}! ${achievement.description}`);
-                }
-            });
+// Check for achievements - FIXED: Proper achievement checking
+achievements.forEach(achievement => {
+    if (!updatedData.achievementsUnlocked.includes(achievement.id) && 
+        achievement.condition(updatedData, updatedData.achievementsUnlocked)) {
+        updatedData.achievementsUnlocked.push(achievement.id);
+        // Ensure storyLog exists before pushing
+        if (!updatedData.storyLog) updatedData.storyLog = [];
+        updatedData.storyLog.push(`🎉 Achievement Unlocked: ${achievement.name}! ${achievement.description}`);
+    }
+});
             
             // Random Tasmania fact popup (5% chance)
             if (Math.random() < 0.05) {
@@ -1326,47 +1326,110 @@ if (
                 }
             }, [currentLocation, gameStarted, gameCompleted]);
 
-            const handleChoice = (choice) => {
-                if (choice.id === "end_adventure") {
-                    setGameCompleted(true);
-                    setGameCompletedReason("Adventure Completed Successfully!");
-                    return;
-                }
-                
-                // Generate AI response
-                const response = generateAIResponse(choice, ecosystemData, currentLocation);
-                
-                // Update ecosystem data
-                const updatedEcosystem = updateEcosystem(choice, ecosystemData, currentLocation);
-                setEcosystemData(updatedEcosystem);
-                
-                // Update story log - use the storyLog from updated ecosystem data
-                setStoryLog(updatedEcosystem.storyLog || []);
-                
-                // Determine next choices
-                const nextChoices = getNextChoices(updatedEcosystem, currentLocation);
-                setCurrentChoices(nextChoices);
-                
-                // Possibly change location based on exploration
-                if (choice.id === "explore" && updatedEcosystem.locationsVisited.length > ecosystemData.locationsVisited.length) {
-                    const newLocation = updatedEcosystem.locationsVisited[updatedEcosystem.locationsVisited.length - 1];
-                    setCurrentLocation(newLocation);
-                    setStoryLog(prevLog => [...prevLog, `You've discovered a new area: ${locations[newLocation].name}! This location now has projects available.`]);
-                }
+const handleChoice = (choice) => {
+    if (choice.id === "end_adventure") {
+        setGameCompleted(true);
+        setGameCompletedReason("Adventure Completed Successfully!");
+        return;
+    }
+    
+    // Generate AI response
+    const response = generateAIResponse(choice, ecosystemData, currentLocation);
+    
+// Helper function to generate action descriptions
+const getActionDescription = (choice, currentLocation) => {
+    const locationName = locations[currentLocation]?.name || "the area";
+    
+    const actionDescriptions = {
+        "plant_shrubs": `🌿 You planted native shrubs in ${locationName}.`,
+        "remove_weeds": `🌱 You removed invasive species from ${locationName}.`,
+        "observe_wildlife": `🔍 You spent time observing wildlife in ${locationName}.`,
+        "explore": `🗺️ You explored new areas around ${locationName}.`,
+        "plant_trees": `🌳 You planted native trees in ${locationName}.`,
+        "build_habitat": `🏠 You built habitat structures in ${locationName}.`,
+        "test_water": `💧 You tested water quality in ${locationName}.`,
+        "check_harbour": `⚓ You monitored the harbour health at ${locationName}.`,
+        "educational_program": `📚 You organized an educational program in ${locationName}.`,
+        "fundraiser": `💰 You hosted a fundraising event for ${locationName}.`,
+        "recruit_volunteers": `👥 You recruited volunteers to help in ${locationName}.`,
+        "research_grants": `📊 You applied for research grants for ${locationName}.`,
+        "enact_policy": `📜 You enacted a new conservation policy for ${locationName}.`,
+        "climate_mitigation": `🌍 You implemented climate mitigation measures in ${locationName}.`,
+        "hire_npc": `👨‍🔬 You hired a specialist to join your team.`,
+        "clean_waterways": `🚮 You cleaned up waterways in ${locationName}.`,
+        "install_filtration": `⚗️ You installed water filtration systems in ${locationName}.`,
+        "plant_riparian": `🌊 You planted riparian vegetation along waterways in ${locationName}.`,
+        "run_project": `🚀 You started a new project in ${locationName}.`
+    };
+    
+    // Special handling for project runs
+    if (choice.id === "run_project" && choice.projectId) {
+        const project = locations[currentLocation]?.projects.find(p => p.id === choice.projectId);
+        if (project) {
+            return `🚀 You started the "${project.name}" project in ${locationName}.`;
+        }
+    }
+    
+    // Special handling for NPC hiring
+    if (choice.id === "hire_npc" && choice.npcId) {
+        const npc = npcTeamMembers.find(m => m.id === choice.npcId);
+        if (npc) {
+            return `👨‍🔬 You hired ${npc.name} (${npc.role}) to join your team.`;
+        }
+    }
+    
+    // Special handling for policy enactment
+    if (choice.id === "enact_policy" && choice.policyId) {
+        const policy = policyOptions.find(p => p.id === choice.policyId);
+        if (policy) {
+            return `📜 You enacted the "${policy.name}" policy.`;
+        }
+    }
+    
+    return actionDescriptions[choice.id] || `⚡ You took action in ${locationName}.`;
+};
 
-                // Advance tutorial if needed
-                if (updatedEcosystem.tutorialStep < tutorialSteps.length - 1) {
-                    if (updatedEcosystem.tutorialStep === 0 && choice.id !== "observe_wildlife") {
-                        setEcosystemData(prev => ({...prev, tutorialStep: 1}));
-                    } else if (updatedEcosystem.tutorialStep === 1 && choice.id === "explore") {
-                        setEcosystemData(prev => ({...prev, tutorialStep: 2}));
-                    } else if (updatedEcosystem.tutorialStep === 2 && choice.id.includes("run_project")) {
-                        setEcosystemData(prev => ({...prev, tutorialStep: 3}));
-                    } else if (updatedEcosystem.tutorialStep === 3 && updatedEcosystem.day > 5) {
-                        setEcosystemData(prev => ({...prev, tutorialStep: 4}));
-                    }
-                }
-            };
+    // Update ecosystem data
+    const updatedEcosystem = updateEcosystem(choice, ecosystemData, currentLocation);
+    setEcosystemData(updatedEcosystem);
+    
+    // Add the action description to story log BEFORE the AI response
+    const actionDescription = getActionDescription(choice, currentLocation);
+    const newStoryLog = [...(updatedEcosystem.storyLog || []), actionDescription, response];
+    
+    // Update story log with both action and response
+    setStoryLog(newStoryLog);
+    
+    // Update the ecosystem data with the new story log
+    setEcosystemData(prev => ({
+        ...prev,
+        storyLog: newStoryLog
+    }));
+    
+    // Determine next choices
+    const nextChoices = getNextChoices(updatedEcosystem, currentLocation);
+    setCurrentChoices(nextChoices);
+    
+    // Possibly change location based on exploration
+    if (choice.id === "explore" && updatedEcosystem.locationsVisited.length > ecosystemData.locationsVisited.length) {
+        const newLocation = updatedEcosystem.locationsVisited[updatedEcosystem.locationsVisited.length - 1];
+        setCurrentLocation(newLocation);
+        setStoryLog(prevLog => [...prevLog, `You've discovered a new area: ${locations[newLocation].name}! This location now has projects available.`]);
+    }
+
+    // Advance tutorial if needed
+    if (updatedEcosystem.tutorialStep < tutorialSteps.length - 1) {
+        if (updatedEcosystem.tutorialStep === 0 && choice.id !== "observe_wildlife") {
+            setEcosystemData(prev => ({...prev, tutorialStep: 1}));
+        } else if (updatedEcosystem.tutorialStep === 1 && choice.id === "explore") {
+            setEcosystemData(prev => ({...prev, tutorialStep: 2}));
+        } else if (updatedEcosystem.tutorialStep === 2 && choice.id.includes("run_project")) {
+            setEcosystemData(prev => ({...prev, tutorialStep: 3}));
+        } else if (updatedEcosystem.tutorialStep === 3 && updatedEcosystem.day > 5) {
+            setEcosystemData(prev => ({...prev, tutorialStep: 4}));
+        }
+    }
+};
 
             const handleLocationChange = (locationKey) => {
                 if (ecosystemData.locationsVisited.includes(locationKey)) {
