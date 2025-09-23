@@ -909,6 +909,27 @@
             
             const specialChoices = [];
             
+// Show hire NPC option if in team mode and you have enough budget, and haven't hired all professionals
+if (
+    ecosystemData.gameMode === 'team' &&
+    npcTeamMembers.some(npc => !ecosystemData.npcTeam.map(m => m.id).includes(npc.id)) &&
+    budget >= Math.min(...npcTeamMembers.map(npc => npc.cost))
+) {
+    // For each NPC not yet hired and affordable, add a hire option
+    npcTeamMembers.forEach(npc => {
+        if (!ecosystemData.npcTeam.map(m => m.id).includes(npc.id) && budget >= npc.cost) {
+            specialChoices.push({
+                id: "hire_npc",
+                text: `Hire ${npc.name} (${npc.role})`,
+                cost: npc.cost,
+                time: 1,
+                npcId: npc.id,
+                className: "bg-blue-200 border-blue-400"
+            });
+        }
+    });
+}
+
             // Add available projects for current location
             if (unlockedProjects && unlockedProjects[currentLocation] && unlockedProjects[currentLocation].length > 0) {
                 locations[currentLocation].projects.forEach(project => {
@@ -960,8 +981,8 @@
             // Combine all choices - special choices first, then base choices
             const allChoices = [...specialChoices, ...baseChoices];
             
-            // Return up to 6 choices for better UI
-            return allChoices.slice(0, 6);
+            // Return up to 8 choices for better UI
+            return allChoices.slice(0, 8);
         };
 
         // Map component for location visualization
