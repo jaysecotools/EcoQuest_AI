@@ -920,30 +920,44 @@ achievements.forEach(achievement => {
 // Show hire NPC option if in team mode and you have enough budget, and haven't hired all professionals
 if (
     ecosystemData.gameMode === 'team' &&
+    ecosystemData.day >= 12 &&
+    ecosystemData.reputation > 28 &&
     npcTeamMembers.some(npc => !ecosystemData.npcTeam.map(m => m.id).includes(npc.id)) &&
     budget >= Math.min(...npcTeamMembers.map(npc => npc.cost))
 ) {
-    // For each NPC not yet hired and affordable, add a hire option
-    npcTeamMembers.forEach(npc => {
-        if (!ecosystemData.npcTeam.map(m => m.id).includes(npc.id) && budget >= npc.cost) {
-            specialChoices.push({
-                id: "hire_npc",
-                text: `Hire ${npc.name} (${npc.role})`,
-                cost: npc.cost,
-                time: 1,
-                npcId: npc.id,
-                className: "bg-blue-200 border-blue-400"
-            });
-        }
-    });
+    const hireableNPCs = npcTeamMembers.filter(npc =>
+        !ecosystemData.npcTeam.map(m => m.id).includes(npc.id) &&
+        budget >= npc.cost
+    );
+    
+    // Only add ONE NPC option, choose randomly from available
+    if (hireableNPCs.length > 0) {
+        const npc = hireableNPCs[Math.floor(Math.random() * hireableNPCs.length)];
+        specialChoices.push({
+            id: "hire_npc",
+            text: `Hire ${npc.name} (${npc.role})`,
+            cost: npc.cost,
+            time: 1,
+            npcId: npc.id,
+            className: "bg-blue-200 border-blue-400"
+        });
+    }
 }
 
-// Add available policies as choices if not already enacted and budget allows
-policyOptions.forEach(policy => {
-    if (
-        !ecosystemData.policiesEnacted.includes(policy.id) && // Policy not enacted yet
-        budget >= policy.cost * costMultiplier // Can afford it
-    ) {
+// Policy options - only show one at a time
+if (
+    ecosystemData.day >= 10 &&
+    ecosystemData.reputation > 35 &&
+    ecosystemData.budget >= 700
+) {
+    const availablePolicies = policyOptions.filter(policy =>
+        !ecosystemData.policiesEnacted.includes(policy.id) &&
+        ecosystemData.budget >= policy.cost * costMultiplier
+    );
+    
+    // Only add ONE policy option, choose randomly from available
+    if (availablePolicies.length > 0) {
+        const policy = availablePolicies[Math.floor(Math.random() * availablePolicies.length)];
         specialChoices.push({
             id: "enact_policy",
             text: `Enact Policy: ${policy.name}`,
@@ -953,23 +967,35 @@ policyOptions.forEach(policy => {
             className: "policy-card"
         });
     }
-});
-            
-            // Add available projects for current location
-            if (unlockedProjects && unlockedProjects[currentLocation] && unlockedProjects[currentLocation].length > 0) {
-                locations[currentLocation].projects.forEach(project => {
-                    if (unlockedProjects[currentLocation].includes(project.id) && budget >= project.cost * costMultiplier) {
-                        specialChoices.push({
-                            id: "run_project",
-                            text: `Project: ${project.name}`,
-                            cost: project.cost,
-                            time: 2,
-                            projectId: project.id,
-                            className: "location-unlocked pulse-animation"
-                        });
-                    }
-                });
-            }
+}
+
+// Project options - only show one at a time per location
+if (
+    ecosystemData.day >= 8 &&
+    ecosystemData.reputation > 18 &&
+    ecosystemData.budget >= 300 &&
+    unlockedProjects &&
+    unlockedProjects[currentLocation] &&
+    unlockedProjects[currentLocation].length > 0
+) {
+    const availableProjects = locations[currentLocation].projects.filter(project =>
+        unlockedProjects[currentLocation].includes(project.id) &&
+        budget >= project.cost * costMultiplier
+    );
+    
+    // Only add ONE project option, choose randomly from available
+    if (availableProjects.length > 0) {
+        const project = availableProjects[Math.floor(Math.random() * availableProjects.length)];
+        specialChoices.push({
+            id: "run_project",
+            text: `Project: ${project.name}`,
+            cost: project.cost,
+            time: 2,
+            projectId: project.id,
+            className: "location-unlocked pulse-animation"
+        });
+    }
+}
             
             // Add other actions based on budget and conditions
             if (budget >= 50 * costMultiplier) {
