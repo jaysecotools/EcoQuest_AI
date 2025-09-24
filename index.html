@@ -235,6 +235,10 @@
             "The Tasmanian wedge-tailed eagle has a wingspan of up to 2.3 meters."
         ];
 
+        // Fundraiser and budget limits
+        const FUNDRAISER_COOLDOWN_DAYS = 5;
+        const MAX_BUDGET = 7500;
+
         // Achievement system - FIXED: Corrected all_projects achievement condition
         const achievements = [
             { id: "first_tree", name: "First Tree Planted", description: "Plant your first native tree", icon: "🌱", condition: (data) => data.treesPlanted >= 1 },
@@ -369,7 +373,8 @@
             storyLog: [
                 "🌿 Welcome to EcoQuest: Tasmania! Your mission is to restore balance to Tasmania's unique ecosystems.",
                 "You arrive in the Tarkine rainforest, one of the last temperate rainforests in the world with ancient myrtle trees and lush ferns."
-            ]
+            ],
+            lastFundraiserDay: 0 // Added for fundraiser cooldown tracking
         };
 
         // Tutorial steps
@@ -659,10 +664,39 @@ case "observe_wildlife":
                     updatedData.budget -= choice.cost * costMultiplier;
                     break;
                 case "fundraiser":
+                    // Check if fundraiser is on cooldown
+                    if (updatedData.lastFundraiserDay && 
+                        updatedData.day - updatedData.lastFundraiserDay < FUNDRAISER_COOLDOWN_DAYS) {
+                        // Still on cooldown - don't allow fundraising
+                        if (!updatedData.storyLog) updatedData.storyLog = [];
+                        updatedData.storyLog.push("⏰ Fundraising is on cooldown. You need to wait before organizing another fundraiser.");
+                        break; // Exit early without processing the fundraiser
+                    }
+                    
+                    // Check if budget is already at maximum
+                    if (updatedData.budget >= MAX_BUDGET) {
+                        if (!updatedData.storyLog) updatedData.storyLog = [];
+                        updatedData.storyLog.push("💰 You've reached the maximum budget of $" + MAX_BUDGET + ". No need for more fundraising!");
+                        break; // Exit early without processing the fundraiser
+                    }
+                    
                     // More effective fundraising based on reputation
                     const fundraisingAmount = (300 + Math.floor(Math.random() * 400) + (updatedData.reputation * 2)) * budgetMultiplier;
-                    updatedData.budget += fundraisingAmount;
+                    
+                    // Apply the maximum budget limit
+                    const newBudget = updatedData.budget + fundraisingAmount;
+                    updatedData.budget = Math.min(newBudget, MAX_BUDGET);
+                    
+                    // Set cooldown
+                    updatedData.lastFundraiserDay = updatedData.day;
+                    
                     updatedData.reputation += 5;
+                    
+                    // Add message if we hit the cap
+                    if (updatedData.budget >= MAX_BUDGET) {
+                        if (!updatedData.storyLog) updatedData.storyLog = [];
+                        updatedData.storyLog.push("🎯 You've reached the maximum budget of $" + MAX_BUDGET + "!");
+                    }
                     break;
                 case "recruit_volunteers":
                     updatedData.volunteers += 3 + Math.floor(Math.random() * 5);
@@ -767,10 +801,11 @@ case "observe_wildlife":
                 updatedData.ecosystemHealth += Math.floor(updatedData.volunteers / 5);
                 updatedData.waterQuality += Math.floor(updatedData.volunteers / 10);
                 
-                // Volunteers enable passive fundraising
-                if (updatedData.day % 5 === 0) {
+                // Volunteers enable passive fundraising (respect budget cap)
+                if (updatedData.day % 5 === 0 && updatedData.budget < MAX_BUDGET) {
                     const volunteerFundraising = Math.floor(updatedData.volunteers * 2.5) * budgetMultiplier;
-                    updatedData.budget += volunteerFundraising;
+                    const newBudget = updatedData.budget + volunteerFundraising;
+                    updatedData.budget = Math.min(newBudget, MAX_BUDGET);
                 }
             }
             
@@ -862,10 +897,11 @@ case "observe_wildlife":
                 }
             });
             
-            // Cap values
+            // Cap values (including budget cap)
             updatedData.ecosystemHealth = Math.min(Math.max(updatedData.ecosystemHealth, 0), 100);
             updatedData.biodiversityIndex = Math.min(Math.max(updatedData.biodiversityIndex, 0), 100);
             updatedData.waterQuality = Math.min(Math.max(updatedData.waterQuality, 0), 100);
+            updatedData.budget = Math.min(Math.max(updatedData.budget, 0), MAX_BUDGET); // Enforce budget cap
             updatedData.temperature = Math.min(Math.max(updatedData.temperature, -5), 35);
             updatedData.rainfall = Math.min(Math.max(updatedData.rainfall, 0), 200);
             
@@ -904,7 +940,7 @@ achievements.forEach(achievement => {
 
         // More dynamic choice generation - FIXED: Improved choice generation logic
         const getNextChoices = (ecosystemData, currentLocation) => {
-            const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam, unlockedProjects } = ecosystemData;
+            const { ecosystemHealth, biodiversityIndex, budget, reputation, educationLevel, volunteers, locationsVisited, policiesEnacted, climateEvents, npcTeam, unlockedProjects, day, lastFundraiserDay } = ecosystemData;
             const challengeMode = challengeModes[ecosystemData.challengeMode];
             const costMultiplier = challengeMode.costMultiplier || 1;
             const budgetMultiplier = challengeMode.budgetMultiplier || 1;
@@ -1017,7 +1053,33 @@ if (currentLocation === 'macquarie_harbor') {
             
             // Add fundraising and volunteer actions based on reputation
             if (reputation >= 15) {
-                specialChoices.push({ id: "fundraiser", text: "Organize fundraiser", cost: 30, time: 2, className: "fundraising-action" });
+                // Check if fundraiser is available (not on cooldown and not at max budget)
+                const isFundraiserOnCooldown = lastFundraiserDay && (day - lastFundraiserDay < FUNDRAISER_COOLDOWN_DAYS);
+                const isAtMaxBudget = budget >= MAX_BUDGET;
+                
+                let fundraiserText = "Organize fundraiser";
+                let fundraiserDisabled = false;
+                let fundraiserClassName = "fundraising-action";
+                
+                if (isFundraiserOnCooldown) {
+                    const daysLeft = FUNDRAISER_COOLDOWN_DAYS - (day - lastFundraiserDay);
+                    fundraiserText = `Fundraiser (${daysLeft}d cooldown)`;
+                    fundraiserDisabled = true;
+                    fundraiserClassName += " opacity-50 cursor-not-allowed";
+                } else if (isAtMaxBudget) {
+                    fundraiserText = "Max Budget Reached";
+                    fundraiserDisabled = true;
+                    fundraiserClassName += " opacity-50 cursor-not-allowed";
+                }
+                
+                specialChoices.push({ 
+                    id: "fundraiser", 
+                    text: fundraiserText, 
+                    cost: 30, 
+                    time: 2, 
+                    className: fundraiserClassName,
+                    disabled: fundraiserDisabled
+                });
             }
             
             if (reputation >= 25) {
@@ -1341,7 +1403,7 @@ if (currentLocation === 'macquarie_harbor') {
             const [showSettings, setShowSettings] = useState(false);
             const [replayDay, setReplayDay] = useState(null);
             const [showShareModal, setShowShareModal] = useState(false);
-            const [showAllAchievements, setShowAllAchievements] = useState(true); // NEW STATE
+            const [showAllAchievements, setShowAllAchievements] = useState(true);
 
             // Save game data to localStorage whenever it changes
             useEffect(() => {
@@ -1514,7 +1576,7 @@ const getActionDescription = (choice, currentLocation) => {
                 setCurrentLocation('tarkine_forest');
                 setWeatherData(null);
                 setReplayDay(null);
-                setShowAllAchievements(true); // Reset toggle state
+                setShowAllAchievements(true);
                 localStorage.removeItem('ecoQuestSaveData');
             };
 
@@ -2060,10 +2122,10 @@ Try it yourself at: ${window.location.href}`;
                                         {currentChoices.map((choice, idx) => (
                                             <button
                                                 key={idx}
-                                                onClick={() => handleChoice(choice)}
-                                                disabled={displayData.budget < choice.cost}
-                                                className={`${displayData.budget < choice.cost ? 
-                                                    'bg-gray-300 cursor-not-allowed' : 
+                                                onClick={() => !choice.disabled && handleChoice(choice)}
+                                                disabled={displayData.budget < choice.cost || choice.disabled}
+                                                className={`${displayData.budget < choice.cost || choice.disabled ? 
+                                                    'bg-gray-300 cursor-not-allowed opacity-50' : 
                                                     choice.className ? choice.className : 'bg-green-500 hover:bg-green-600'} 
                                                     text-white font-medium py-3 px-4 rounded-lg transition duration-300 transform hover:scale-105 btn-hover flex items-center justify-center`}
                                             >
@@ -2076,6 +2138,19 @@ Try it yourself at: ${window.location.href}`;
                                                 {choice.time > 1 && (
                                                     <span className="ml-2 bg-green-500 rounded-full px-2 py-1 text-xs">
                                                         {choice.time}d
+                                                    </span>
+                                                )}
+                                                {/* Add cooldown indicator */}
+                                                {choice.id === "fundraiser" && ecosystemData.lastFundraiserDay && 
+                                                    (ecosystemData.day - ecosystemData.lastFundraiserDay < FUNDRAISER_COOLDOWN_DAYS) && (
+                                                    <span className="ml-2 bg-yellow-500 rounded-full px-2 py-1 text-xs">
+                                                        ⏰
+                                                    </span>
+                                                )}
+                                                {/* Add max budget indicator */}
+                                                {choice.id === "fundraiser" && ecosystemData.budget >= MAX_BUDGET && (
+                                                    <span className="ml-2 bg-red-500 rounded-full px-2 py-1 text-xs">
+                                                        💰
                                                     </span>
                                                 )}
                                             </button>
@@ -2165,8 +2240,20 @@ Try it yourself at: ${window.location.href}`;
                                                 <Tooltip text={tooltips.budget}>
                                                     <span>Resources</span>
                                                 </Tooltip>
-                                                <span className="text-lg font-bold text-green-600">${displayData.budget}</span>
+                                                <span className="text-lg font-bold text-green-600">${displayData.budget} / ${MAX_BUDGET}</span>
                                             </h3>
+                                            <div className="mt-1 mb-2">
+                                                <div className="flex justify-between text-xs text-gray-600">
+                                                    <span>Budget Progress</span>
+                                                    <span>{Math.round((displayData.budget / MAX_BUDGET) * 100)}%</span>
+                                                </div>
+                                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                                    <div 
+                                                        className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                                                        style={{ width: `${(displayData.budget / MAX_BUDGET) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
                                             <ul className="space-y-2">
                                                 <li className="flex justify-between">
                                                     <Tooltip text={tooltips.shrubsPlanted}>
@@ -2397,6 +2484,6 @@ try {
     // Fallback to React 17 method
     ReactDOM.render(<EcoQuest />, appContainer);
 }
-    </script>
+    </script>    
 </body>
 </html>
