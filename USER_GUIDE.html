@@ -412,12 +412,11 @@
   </div>
 
 <script>
-  // expose a global close function so the onclick works
-  window.closeGuide = function () {
-    // go back to previous page; if that isn't desired in your app, replace this with custom logic
-    if (window.history.length > 1) window.history.back();
-    else window.location.href = '/'; // fallback: send to site root
-  };
+// expose a global close function so the onclick works
+window.closeGuide = function () {
+  window.close(); // close the tab
+};
+
 
   // Build ToC from headings
   (function(){
