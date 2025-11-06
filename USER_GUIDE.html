@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EcoQuest: Tasmania — User Guide</title>
+
+<style>
+  :root{
+    --bg: #f7faf9;
+    --card: #ffffff;
+    --muted: #58606a;
+    --accent: #1f7a74;
+    --accent-2: #2b7a78;
+    --border: #e6e9eb;
+    --maxw: 980px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    color:#112;
+    background:linear-gradient(180deg,var(--bg),#f2f5f6);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:28px;
+    display:flex;
+    justify-content:center;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:var(--maxw);
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    gap:20px;
+    align-items:start;
+  }
+
+  /* Sidebar / ToC */
+  nav.toc{
+    position:sticky;
+    top:28px;
+    height:calc(100vh - 56px);
+    overflow:auto;
+    background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.8));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:0 6px 18px rgba(16,24,32,0.06);
+  }
+  nav.toc h2{
+    margin:0 0 0.5rem;
+    font-size:1rem;
+    color:var(--accent-2);
+  }
+  .toc-search{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .toc-search input{
+    flex:1;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:#fff;
+  }
+  .toc-list{
+    list-style:none;
+    margin:0;
+    padding:0;
+    font-size:0.95rem;
+  }
+  .toc-list li{
+    margin:6px 0;
+  }
+  .toc-list a{
+    color:#0b4f4b;
+    text-decoration:none;
+  }
+  .toc-list a.small{font-size:0.9rem;color:var(--muted)}
+
+  /* Content */
+  article.guide{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:28px;
+    border:1px solid var(--border);
+    box-shadow:0 10px 30px rgba(14,20,24,0.04);
+  }
+
+  article.guide h1{
+    margin:0 0 6px;
+    font-size:1.8rem;
+    color:var(--accent-2);
+  }
+  article.guide p.lead{
+    margin:0 0 16px;
+    color:var(--muted);
+  }
+
+  /* Headings and text */
+  article.guide h2{margin-top:1.2rem;font-size:1.25rem;color:#113f3d}
+  article.guide h3{margin-top:1rem;font-size:1.05rem;color:#154e4b}
+  article.guide p{margin:0.6rem 0;line-height:1.6}
+  article.guide ul, article.guide ol{margin:0.4rem 0 0.8rem 1.2rem}
+  article.guide pre{
+    background:#0f1720;color:#e6eef6;padding:12px;border-radius:8px;overflow:auto;font-family:var(--mono);
+    margin:0.6rem 0;
+  }
+  article.guide code{background:#f3f5f6;padding:0.15rem 0.38rem;border-radius:6px;font-family:var(--mono)}
+  article.guide hr{border:none;height:1px;background:var(--border);margin:18px 0}
+
+  table{
+    width:100%;border-collapse:collapse;margin:0.6rem 0;
+  }
+  th, td{border:1px solid var(--border);padding:8px;text-align:left;font-size:0.95rem}
+
+  /* Small helpers & footer */
+  .meta{
+    display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:0.95rem
+  }
+  .small{font-size:0.95rem;color:var(--muted)}
+  .kbd{background:#f3f4f6;border:1px solid var(--border);padding:3px 7px;border-radius:6px;font-family:var(--mono);font-size:0.9rem}
+
+  /* Responsive */
+  @media (max-width:980px){
+    .wrap{grid-template-columns:1fr; padding:0}
+    nav.toc{position:relative;height:auto;order:2}
+    article.guide{order:1}
+  }
+
+  /* Print */
+  @media print{
+    body{padding:0;background:white}
+    nav.toc, .toc-search{display:none}
+    .wrap{max-width:100%}
+    article.guide{box-shadow:none;border:none;padding:0}
+  }
+
+  /* anchor highlight */
+  :target { outline: 4px solid rgba(45,125,112,0.12); border-radius:6px; padding:2px }
+</style>
+</head>
+<body>
+  <div class="wrap" role="main">
+    <nav class="toc" aria-label="Table of contents">
+      <h2>Contents</h2>
+
+      <div class="toc-search" role="search">
+        <input id="tocFilter" type="search" placeholder="Filter contents or search headings" aria-label="Filter contents">
+        <button id="toggleToc" title="Toggle compact view" aria-label="Toggle compact view">☰</button>
+      </div>
+
+      <ul id="tocList" class="toc-list" aria-hidden="false">
+        <!-- JS will populate -->
+      </ul>
+
+      <div style="margin-top:12px" class="small">
+        <div>Tip: click any item to jump to that section.</div>
+        <div style="margin-top:8px">Printable view: use your browser print (Ctrl/Cmd+P).</div>
+      </div>
+    </nav>
+
+    <article class="guide" id="guide" tabindex="0">
+      <h1 id="ecoquest-tasmania">EcoQuest: Tasmania Conservation</h1>
+      <p class="lead"><strong>User Guide</strong></p>
+
+      <p>Welcome to EcoQuest: Tasmania! In this educational simulation game, you are tasked with restoring balance to Tasmania’s unique ecosystems. Manage resources, make impactful decisions, and learn about the region’s wildlife, habitats, and conservation challenges.</p>
+
+      <hr>
+
+      <h2 id="table-of-contents">Table of Contents</h2>
+      <ol>
+        <li><a href="#getting-started">Getting Started</a></li>
+        <li><a href="#game-interface-overview">Game Interface Overview</a></li>
+        <li><a href="#core-concepts">Core Concepts</a>
+          <ul>
+            <li><a href="#ecosystem-data">Ecosystem Data</a></li>
+            <li><a href="#tasmania-locations">Tasmania Locations</a></li>
+            <li><a href="#wildlife">Wildlife</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#actions-choices">Actions (Choices)</a></li>
+          </ul>
+        </li>
+        <li><a href="#gameplay-flow">Gameplay Flow</a>
+          <ul>
+            <li><a href="#making-choices">Making Choices</a></li>
+            <li><a href="#exploring-new-locations">Exploring New Locations</a></li>
+            <li><a href="#managing-resources">Managing Resources</a></li>
+          </ul>
+        </li>
+        <li><a href="#special-features">Special Features</a>
+          <ul>
+            <li><a href="#achievements">Achievements</a></li>
+            <li><a href="#npc-team">NPC Team</a></li>
+            <li><a href="#policies">Policies</a></li>
+            <li><a href="#climate-events">Climate Events</a></li>
+            <li><a href="#challenge-modes">Challenge Modes</a></li>
+            <li><a href="#map-integration">Map Integration</a></li>
+          </ul>
+        </li>
+        <li><a href="#tips-and-strategies">Tips and Strategies</a></li>
+        <li><a href="#glossary">Glossary</a></li>
+        <li><a href="#troubleshooting--faq">Troubleshooting &amp; FAQ</a></li>
+      </ol>
+
+      <hr>
+
+      <h2 id="getting-started">Getting Started</h2>
+      <ol>
+        <li><strong>Open the Game:</strong><br>The game runs in your browser. Open the <span class="kbd">index.html</span> file or visit the provided site.</li>
+        <li><strong>Introduction:</strong><br>You’ll see a welcome message and the first steps of your adventure in the Tarkine rainforest.</li>
+        <li><strong>Tutorial:</strong><br>The game starts with a step-by-step tutorial highlighting core gameplay elements.</li>
+      </ol>
+
+      <h2 id="game-interface-overview">Game Interface Overview</h2>
+      <ul>
+        <li><strong>Main Area:</strong> The central panel displays the story log, current choices, and key events.</li>
+        <li><strong>Status/Dashboard:</strong> Track your ecosystem health, biodiversity, water quality, budget, reputation, volunteers, temperature, rainfall, and more.</li>
+        <li><strong>Map:</strong> Visualises your current location and lets you navigate to different Tasmanian habitats.</li>
+        <li><strong>Achievements &amp; Log:</strong> View unlocked achievements, notifications, and Tasmania facts.</li>
+        <li><strong>Action Buttons:</strong> Choices for your next action, such as exploring, planting, or starting a project.</li>
+      </ul>
+
+      <h2 id="core-concepts">Core Concepts</h2>
+
+      <h3 id="ecosystem-data">Ecosystem Data</h3>
+      <ul>
+        <li><strong>Ecosystem Health:</strong> Overall quality of the environment in your current area.</li>
+        <li><strong>Biodiversity Index:</strong> Diversity of animal and plant species present.</li>
+        <li><strong>Water Quality:</strong> Health of rivers, lakes, and harbours.</li>
+        <li><strong>Budget:</strong> Funds available for projects and actions.</li>
+        <li><strong>Reputation:</strong> Public support and respect for your efforts.</li>
+        <li><strong>Volunteers:</strong> Helpers that boost your effectiveness.</li>
+        <li><strong>Temperature, Rainfall, CO₂:</strong> Environmental variables affected by your actions and climate events.</li>
+      </ul>
+
+      <h3 id="tasmania-locations">Tasmania Locations</h3>
+      <p>You’ll visit and restore iconic regions, such as:</p>
+      <ul>
+        <li>Tarkine Rainforest</li>
+        <li>Cradle Mountain–Lake St Clair</li>
+        <li>Freycinet Peninsula</li>
+        <li>Maria Island</li>
+        <li>Macquarie Harbour</li>
+      </ul>
+      <p>Each has unique species, threats, and projects.</p>
+
+      <h3 id="wildlife">Wildlife</h3>
+      <p>Observe, protect, and learn about Tasmanian species, including:</p>
+      <ul>
+        <li>Tasmanian Devil</li>
+        <li>Wedge-tailed Eagle</li>
+        <li>Platypus</li>
+        <li>Eastern Quoll</li>
+        <li>Green Rosella</li>
+        <li>And more!</li>
+      </ul>
+      <p>Each species contributes to ecosystem indicators.</p>
+
+      <h3 id="projects">Projects</h3>
+      <p>Each location features several major projects (e.g., “Reforestation Program”, “Devil Tracking Program”). Completing projects yields large benefits and unlocks achievements.</p>
+
+      <h3 id="actions-choices">Actions (Choices)</h3>
+      <p>At each turn, you’ll select from available actions, such as:</p>
+      <ul>
+        <li>Planting shrubs or trees</li>
+        <li>Removing invasive species</li>
+        <li>Observing wildlife</li>
+        <li>Exploring new areas</li>
+        <li>Running specific projects</li>
+        <li>Organising fundraisers</li>
+        <li>Recruiting volunteers</li>
+        <li>Enacting policies</li>
+        <li>Responding to climate events</li>
+      </ul>
+      <p>Actions cost time, and often money, and impact multiple ecosystem metrics.</p>
+
+      <h2 id="gameplay-flow">Gameplay Flow</h2>
+
+      <h3 id="making-choices">Making Choices</h3>
+      <ul>
+        <li><strong>Available Choices:</strong> Choose from a dynamic set of possible actions based on your current location, resources, and progress.</li>
+        <li><strong>Project Priority:</strong> If location projects are available and affordable, they are prioritised in the action list.</li>
+        <li><strong>Action Effects:</strong> Each choice affects one or more ecosystem variables, and may trigger story log events, achievements, or Tasmania facts.</li>
+      </ul>
+
+      <h3 id="exploring-new-locations">Exploring New Locations</h3>
+      <ul>
+        <li>Use “Explore” to discover new Tasmanian sites.</li>
+        <li>Each new area has unique restoration potential, species, and threats.</li>
+        <li>Visiting all locations is required for certain achievements.</li>
+      </ul>
+
+      <h3 id="managing-resources">Managing Resources</h3>
+      <ul>
+        <li><strong>Budget:</strong> Earn funds via fundraisers, grants, and volunteers. Spend wisely on impactful projects.</li>
+        <li><strong>Volunteers:</strong> Recruit to boost resource gathering and passive benefits.</li>
+        <li><strong>Reputation:</strong> Improved by success and educational outreach; unlocks new opportunities.</li>
+        <li><strong>Time:</strong> The game advances in days, with seasons changing every 30 days and climate change effects accumulating.</li>
+      </ul>
+
+      <h2 id="special-features">Special Features</h2>
+
+      <h3 id="achievements">Achievements</h3>
+      <p>Earned by reaching milestones: planting trees, discovering wildlife, completing projects, etc. Unlocking all achievements earns the title “Master Conservationist”.</p>
+
+      <h3 id="npc-team">NPC Team</h3>
+      <p>Recruit specialists (Botanist, Ecologist, Park Ranger, Indigenous Guide). Each provides unique bonuses to restoration efforts and resource gains.</p>
+
+      <h3 id="policies">Policies</h3>
+      <p>Enact policies (e.g., Carbon Tax, Conservation Funding). Policies have both immediate and ongoing effects on budget, health, biodiversity, and public support.</p>
+
+      <h3 id="climate-events">Climate Events</h3>
+      <p>Random events (droughts, floods, wildfires, storms, heatwaves) periodically impact the ecosystem. Build resilience with climate mitigation actions.</p>
+
+      <h3 id="challenge-modes">Challenge Modes</h3>
+      <ul>
+        <li><strong>Standard Mode:</strong> Balanced gameplay.</li>
+        <li><strong>Time Attack:</strong> Restore the ecosystem within a set number of days.</li>
+        <li><strong>Budget Restricted:</strong> Higher costs and limited funding.</li>
+        <li><strong>Climate Crisis:</strong> More frequent and severe climate events.</li>
+      </ul>
+
+      <h3 id="map-integration">Map Integration</h3>
+      <p>Visualise your progress and location on a map of Tasmania. Each site is marked; clicking may show more information.</p>
+
+      <h2 id="tips-and-strategies">Tips and Strategies</h2>
+      <ul>
+        <li>Prioritise high-impact projects early.</li>
+        <li>Recruit volunteers and specialists for passive and active benefits.</li>
+        <li>Maintain a balanced focus on ecosystem health, biodiversity, and water quality.</li>
+        <li>Use fundraisers and grants to avoid running out of money.</li>
+        <li>Monitor climate events and enact policies to mitigate their effects.</li>
+        <li>Explore new locations to unlock more projects and achievements.</li>
+        <li>Read Tasmania facts and achievement notifications to learn about real-world conservation.</li>
+      </ul>
+
+      <h2 id="glossary">Glossary</h2>
+      <dl>
+        <dt><strong>Ecosystem Health</strong></dt>
+        <dd>Composite measure of the environment’s state.</dd>
+
+        <dt><strong>Biodiversity Index</strong></dt>
+        <dd>Number and variety of living species.</dd>
+
+        <dt><strong>Riparian Planting</strong></dt>
+        <dd>Adding vegetation along waterways.</dd>
+
+        <dt><strong>Habitat Quality</strong></dt>
+        <dd>Suitability for supporting wildlife.</dd>
+
+        <dt><strong>Invasive Species</strong></dt>
+        <dd>Plants or animals that harm native ecosystems.</dd>
+
+        <dt><strong>Carbon Sequestration</strong></dt>
+        <dd>Capturing and storing atmospheric CO₂.</dd>
+      </dl>
+
+      <h2 id="troubleshooting--faq">Troubleshooting &amp; FAQ</h2>
+
+      <h3>Q: I ran out of budget!</h3>
+      <p>A: Organise fundraisers, apply for grants, or recruit volunteers to boost funds.</p>
+
+      <h3>Q: How do I win?</h3>
+      <p>A: There’s no single “win” state; aim for maximum ecosystem health, biodiversity, water quality, and to unlock all achievements.</p>
+
+      <h3>Q: Why are some choices unavailable?</h3>
+      <p>A: Choices depend on your resources, location, and progress. Earn more budget or reputation to unlock more options.</p>
+
+      <h3>Q: What happens in Time Attack mode if I run out of time?</h3>
+      <p>A: If you don’t reach the health threshold by the deadline, the challenge ends in failure.</p>
+
+      <h3>Q: Can I lose?</h3>
+      <p>A: There are scenarios where mismanagement or severe climate events can make recovery very difficult or end the game.</p>
+
+      <h3>Q: Where can I find more information about Tasmania?</h3>
+      <p>A: Watch for “Tasmania Fact” popups in the story log for real-world knowledge!</p>
+
+      <hr>
+
+      <h2 id="contact-credits">Contact &amp; Credits</h2>
+      <p>EcoQuest: Tasmania is an educational project designed to raise awareness about ecological restoration and conservation in Tasmania. Special thanks to all contributors, fact-checkers, and the open-source community.</p>
+
+      <p class="meta">Enjoy the adventure, and good luck restoring Tasmania’s wild beauty!</p>
+    </article>
+  </div>
+
+<script>
+  // Build ToC from headings
+  (function(){
+    const tocList = document.getElementById('tocList');
+    const headings = document.querySelectorAll('article.guide h1, article.guide h2, article.guide h3');
+    const frag = document.createDocumentFragment();
+
+    headings.forEach(h => {
+      // ensure each heading has an id
+      if (!h.id) {
+        h.id = h.textContent.trim().toLowerCase().replace(/[^\w]+/g, '-');
+      }
+      // create entry
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + encodeURIComponent(h.id);
+      a.textContent = h.textContent;
+      // smaller links for h3
+      if (h.tagName.toLowerCase() === 'h3') a.className = 'small';
+      a.addEventListener('click', function(e){
+        // smooth scroll and focus
+        e.preventDefault();
+        const target = document.getElementById(h.id);
+        if (target) {
+          history.replaceState(null, '', '#' + encodeURIComponent(h.id));
+          target.scrollIntoView({behavior:'smooth', block:'start'});
+          target.focus({preventScroll:true});
+        }
+      });
+      li.appendChild(a);
+      frag.appendChild(li);
+    });
+
+    tocList.appendChild(frag);
+
+    // Filter / search
+    const filter = document.getElementById('tocFilter');
+    filter.addEventListener('input', function(){
+      const q = this.value.trim().toLowerCase();
+      Array.from(tocList.children).forEach(li => {
+        const t = li.textContent.toLowerCase();
+        li.style.display = q === '' || t.includes(q) ? '' : 'none';
+      });
+    });
+
+    // Toggle compact (example: collapse h3 entries)
+    const toggle = document.getElementById('toggleToc');
+    let compact = false;
+    toggle.addEventListener('click', () => {
+      compact = !compact;
+      Array.from(tocList.children).forEach(li => {
+        const a = li.querySelector('a');
+        if (a && a.classList.contains('small')) {
+          li.style.display = compact ? 'none' : '';
+        }
+      });
+      toggle.textContent = compact ? '☷' : '☰';
+    });
+
+    // If page loads with hash, smooth scroll to it
+    window.addEventListener('load', () => {
+      if (location.hash) {
+        const id = decodeURIComponent(location.hash.slice(1));
+        const el = document.getElementById(id);
+        if (el) setTimeout(()=> el.scrollIntoView({behavior:'smooth'}), 120);
+      }
+    });
+  })();
+</script>
+</body>
+</html>
