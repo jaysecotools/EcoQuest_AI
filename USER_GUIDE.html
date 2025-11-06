@@ -13,7 +13,7 @@
     --accent: #1f7a74;
     --accent-2: #2b7a78;
     --border: #e6e9eb;
-    --maxw: 980px;
+    --maxw: 1150px; /* increased width */
     --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
     --radius: 10px;
   }
@@ -35,7 +35,7 @@
     width:100%;
     max-width:var(--maxw);
     display:grid;
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 300px 1fr; /* wider sidebar so main column is roomier */
     gap:20px;
     align-items:start;
   }
@@ -101,6 +101,23 @@
   article.guide p.lead{
     margin:0 0 16px;
     color:var(--muted);
+  }
+
+  #close-guide {
+    display: block;
+    margin: 60px auto 20px;
+    background: #005f73;
+    color: #fff; /* correct CSS property */
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  #close-guide:hover {
+    background: #0a9396;
   }
 
   /* Headings and text */
@@ -385,13 +402,23 @@
       <hr>
 
       <h2 id="contact-credits">Contact &amp; Credits</h2>
-      <p>EcoQuest: Tasmania is an educational project designed to raise awareness about ecological restoration and conservation in Tasmania. Special thanks the games designer, builder and legend, Jay Rowley.</p>
+      <p>EcoQuest: Tasmania is an educational project designed to raise awareness about ecological restoration and conservation in Tasmania. Special thanks the game's designer, builder and legend, Jay Rowley.</p>
 
       <p class="meta">Enjoy the adventure, and good luck restoring Tasmania’s wild beauty!</p>
+
+      <!-- Close button placed inside the article so it prints with the guide -->
+      <button id="close-guide" onclick="closeGuide()">Close user guide</button>
     </article>
   </div>
 
 <script>
+  // expose a global close function so the onclick works
+  window.closeGuide = function () {
+    // go back to previous page; if that isn't desired in your app, replace this with custom logic
+    if (window.history.length > 1) window.history.back();
+    else window.location.href = '/'; // fallback: send to site root
+  };
+
   // Build ToC from headings
   (function(){
     const tocList = document.getElementById('tocList');
