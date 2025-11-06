@@ -73,7 +73,7 @@
             50% { border-color: green; }
         }
         #map {
-            height: 300px;
+            height: 500px;
             width: 100%;
             border-radius: 0.5rem;
             z-index: 1;
@@ -2088,7 +2088,7 @@ Try it yourself at: ${window.location.href}`;
                                     
                                     <div 
                                         ref={storyPanelRef}
-                                        className="h-96 overflow-y-auto mb-4 p-4 bg-green-50 rounded-lg border border-green-200"
+                                        className="h-[500px] overflow-y-auto mb-4 p-4 bg-green-50 rounded-lg border border-green-200"
                                     >
                                         {storyLog.map((msg, idx) => (
                                             <p key={idx} className="mb-3 text-gray-700 story-text">{msg}</p>
