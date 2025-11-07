@@ -26,6 +26,11 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        .btn-hover:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
         .story-text {
             line-height: 1.6;
         }
@@ -710,14 +715,17 @@
                     updatedData.budget -= choice.cost * costMultiplier;
                     break;
                 case "research_grants":
-                    updatedData.budget += (1500 + Math.floor(Math.random() * 2000)) * budgetMultiplier;
+                    const grantAmount = (1500 + Math.floor(Math.random() * 2000)) * budgetMultiplier;
+                    const newGrantBudget = updatedData.budget + grantAmount;
+                    updatedData.budget = Math.min(newGrantBudget, MAX_BUDGET);
                     updatedData.reputation += 8;
                     break;
                 case "enact_policy":
                     const policy = policyOptions.find(p => p.id === choice.policyId);
                     if (policy) {
                         updatedData.policiesEnacted.push(choice.policyId);
-                        updatedData.budget += (policy.budgetImpact || 0) * budgetMultiplier;
+                        const newPolicyBudget = updatedData.budget + (policy.budgetImpact || 0) * budgetMultiplier;
+                        updatedData.budget = Math.min(Math.max(newPolicyBudget, 0), MAX_BUDGET);
                         updatedData.ecosystemHealth += policy.healthImpact || 0;
                         updatedData.biodiversityIndex += policy.biodiversityImpact || 0;
                         updatedData.waterQuality += policy.waterQualityImpact || 0;
@@ -810,8 +818,8 @@
                 // Volunteers enable passive fundraising (respect budget cap)
                 if (updatedData.day % 5 === 0 && updatedData.budget < MAX_BUDGET) {
                     const volunteerFundraising = Math.floor(updatedData.volunteers * 2.5) * budgetMultiplier;
-                    const newBudget = updatedData.budget + volunteerFundraising;
-                    updatedData.budget = Math.min(newBudget, MAX_BUDGET);
+                    const newVolunteerBudget = updatedData.budget + volunteerFundraising;
+                    updatedData.budget = Math.min(newVolunteerBudget, MAX_BUDGET);
                 }
             }
             
@@ -882,7 +890,8 @@
                 updatedData.waterQuality += event.waterQualityImpact || 0;
                 updatedData.biodiversityIndex += event.biodiversityImpact || 0;
                 updatedData.temperature += event.temperatureImpact || 0;
-                updatedData.budget += event.budgetImpact || 0;
+                const newEventBudget = updatedData.budget + (event.budgetImpact || 0);
+                updatedData.budget = Math.min(Math.max(newEventBudget, 0), MAX_BUDGET);
             }
             
             // Natural processes - ecosystem changes over time
@@ -2461,9 +2470,15 @@ Try it yourself at: ${window.location.href}`;
             );
         }
 
-        // FIXED: Proper React 18 rendering
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<EcoQuest />);
+        // FIXED: Proper React 18 rendering with fallback
+        const rootElement = document.getElementById('root');
+        if (ReactDOM.createRoot) {
+            const root = ReactDOM.createRoot(rootElement);
+            root.render(<EcoQuest />);
+        } else {
+            // Fallback for React 17
+            ReactDOM.render(<EcoQuest />, rootElement);
+        }
     </script>    
 </body>
 </html>
