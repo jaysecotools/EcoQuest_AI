@@ -212,18 +212,88 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback } = React;
 
-        // Tasmania-specific wildlife and locations
+        // 1. UPDATED WILDLIFE DATA STRUCTURE - Add explicit biome compatibility
         const tasmaniaWildlife = {
-            tassie_devil: { name: "Tasmanian Devil", rarity: "endangered", habitat: "forest", indicator: "forest health", image: "🦘" },
-            wedge_eagle: { name: "Wedge-tailed Eagle", rarity: "vulnerable", habitat: "varied", indicator: "ecosystem health", image: "🦅" },
-            platypus: { name: "Platypus", rarity: "rare", habitat: "riparian", indicator: "water quality", image: "🦆" },
-            quoll: { name: "Eastern Quoll", rarity: "endangered", habitat: "forest", indicator: "habitat quality", image: "🐾" },
-            rosella: { name: "Green Rosella", rarity: "common", habitat: "forest", indicator: "forest health", image: "🐦" },
-            pademelon: { name: "Tasmanian Pademelon", rarity: "common", habitat: "forest", indicator: "understory health", image: "🦘" },
-            wombat: { name: "Common Wombat", rarity: "common", habitat: "forest", indicator: "soil health", image: "🐻" },
-            black_currawong: { name: "Black Currawong", rarity: "common", habitat: "forest", indicator: "forest health", image: "🐦" },
-            Maugean_skate: { name: "Maugean Skate", rarity: "endangered", habitat: "harbour", indicator: "water quality", image: "🦞" },
-            blue_gum: { name: "Tasmanian Blue Gum", rarity: "common", habitat: "forest", indicator: "forest maturity", image: "🌳" }
+            tassie_devil: { 
+                name: "Tasmanian Devil", 
+                rarity: "endangered", 
+                habitat: "forest", 
+                indicator: "forest health", 
+                image: "🦘",
+                biomes: ["temperate_rainforest", "temperate_forest", "wet_forest"]
+            },
+            wedge_eagle: { 
+                name: "Wedge-tailed Eagle", 
+                rarity: "vulnerable", 
+                habitat: "varied", 
+                indicator: "ecosystem health", 
+                image: "🦅",
+                biomes: ["temperate_rainforest", "alpine", "coastal", "island", "harbour"]
+            },
+            platypus: { 
+                name: "Platypus", 
+                rarity: "rare", 
+                habitat: "riparian", 
+                indicator: "water quality", 
+                image: "🦆",
+                biomes: ["temperate_rainforest", "riparian", "harbour"]
+            },
+            quoll: { 
+                name: "Eastern Quoll", 
+                rarity: "endangered", 
+                habitat: "forest", 
+                indicator: "habitat quality", 
+                image: "🐾",
+                biomes: ["temperate_rainforest", "temperate_forest", "wet_forest"]
+            },
+            rosella: { 
+                name: "Green Rosella", 
+                rarity: "common", 
+                habitat: "forest", 
+                indicator: "forest health", 
+                image: "🐦",
+                biomes: ["temperate_rainforest", "temperate_forest", "coastal", "island"]
+            },
+            pademelon: { 
+                name: "Tasmanian Pademelon", 
+                rarity: "common", 
+                habitat: "forest", 
+                indicator: "understory health", 
+                image: "🦘",
+                biomes: ["temperate_rainforest", "temperate_forest", "wet_forest"]
+            },
+            wombat: { 
+                name: "Common Wombat", 
+                rarity: "common", 
+                habitat: "forest", 
+                indicator: "soil health", 
+                image: "🐻",
+                biomes: ["temperate_rainforest", "alpine", "temperate_forest"]
+            },
+            black_currawong: { 
+                name: "Black Currawong", 
+                rarity: "common", 
+                habitat: "forest", 
+                indicator: "forest health", 
+                image: "🐦",
+                biomes: ["temperate_rainforest", "alpine", "harbour"]
+            },
+            Maugean_skate: { 
+                name: "Maugean Skate", 
+                rarity: "endangered", 
+                habitat: "harbour", 
+                indicator: "water quality", 
+                image: "🦞",
+                biomes: ["harbour"]
+            },
+            blue_gum: { 
+                name: "Tasmanian Blue Gum", 
+                rarity: "common", 
+                habitat: "forest", 
+                indicator: "forest maturity", 
+                image: "🌳",
+                biomes: ["temperate_rainforest", "temperate_forest", "wet_forest"]
+            }
         };
 
         // Tasmania facts for educational popups
@@ -347,7 +417,7 @@
         const initialEcosystemData = {
             shrubsPlanted: 0,
             treesPlanted: 0,
-            wildlifeObserved: [],
+            wildlifeObserved: [], // Ensure this is an empty array
             invasiveSpeciesRemoved: 0,
             ecosystemHealth: 50,
             biodiversityIndex: 30,
@@ -445,6 +515,7 @@
         // AI model simulation with more sophisticated responses
         const generateAIResponse = (choice, ecosystemData, location) => {
             const { ecosystemHealth, biodiversityIndex, waterQuality, season, temperature, co2Level } = ecosystemData;
+            const locationData = locations[location];
             
             const responses = {
                 "plant_shrubs": [
@@ -458,9 +529,9 @@
                     "Removing weeds reduces competition for water and nutrients."
                 ],
                 "observe_wildlife": [
-                    `You spot ${ecosystemHealth > 60 ? 'increased wildlife activity' : 'signs of struggling wildlife'}.`,
-                    `${season === 'spring' ? 'Spring brings new life to the area.' : ''} You notice animal tracks and feeding signs.`,
-                    "Careful observation reveals how species are interacting with the habitat."
+                    `You spend time quietly observing ${locationData.name}. ${ecosystemHealth > 60 ? 'Wildlife seems active and healthy.' : 'You notice limited wildlife activity.'}`,
+                    `Careful observation reveals ${biodiversityIndex > 40 ? 'diverse species interactions' : 'signs of ecosystem stress'}.`,
+                    `You document wildlife behavior and habitat usage patterns. ${season === 'spring' ? 'Spring brings increased activity!' : ''}`
                 ],
                 "explore": [
                     `You explore the area. ${biodiversityIndex > 40 ? 'The biodiversity seems richer here.' : ''}`,
@@ -573,7 +644,7 @@
             return response;
         };
 
-        // More sophisticated ecosystem update function - FIXED: Proper storyLog handling
+        // More sophisticated ecosystem update function - FIXED: Proper storyLog handling and wildlife observation
         const updateEcosystem = (choice, ecosystemData, currentLocation) => {
             const updatedData = { ...ecosystemData };
             const locationData = locations[currentLocation];
@@ -614,23 +685,79 @@
                     updatedData.budget -= choice.cost * costMultiplier;
                     break;
                 case "observe_wildlife":
-                    // FIXED: Complete the wildlife observation logic
-                    // Improved: Allow "forest" species in forest biomes, "varied" everywhere
+                    // 2. COMPLETELY REWRITTEN: Improved wildlife observation logic with better habitat matching
                     const possibleNewSpecies = Object.keys(tasmaniaWildlife).filter(species => {
+                        // Skip if already observed
                         if (updatedData.wildlifeObserved.includes(species)) return false;
-                        const habitat = tasmaniaWildlife[species].habitat;
-                        if (habitat === "varied") return true;
-                        if (habitat === "forest" && locationData.biome.includes("forest")) return true;
-                        return habitat === locationData.biome;
+                        
+                        const speciesData = tasmaniaWildlife[species];
+                        const currentBiome = locationData.biome;
+                        
+                        // Always include "varied" habitat species
+                        if (speciesData.habitat === "varied") return true;
+                        
+                        // Direct match
+                        if (speciesData.habitat === currentBiome) return true;
+                        
+                        // Expanded habitat-biome relationships for Tasmania
+                        const habitatMatches = {
+                            // Forest habitats
+                            "forest": ["temperate_rainforest", "temperate_forest", "wet_forest"],
+                            "eucalypt_forest": ["temperate_rainforest", "temperate_forest"],
+                            
+                            // Coastal habitats  
+                            "coastal_scrub": ["coastal", "island"],
+                            "marine": ["coastal", "harbour"],
+                            "marine_coastal": ["coastal", "harbour", "island"],
+                            
+                            // Woodland and grassland habitats
+                            "woodlands": ["temperate_forest", "alpine"],
+                            "grassland": ["alpine", "temperate_forest"],
+                            
+                            // Wetland habitats
+                            "wetland": ["riparian", "coastal"],
+                            "riparian": ["riparian", "temperate_rainforest", "harbour"],
+                            
+                            // Alpine habitats
+                            "alpine": ["alpine"],
+                            "heathland": ["alpine", "coastal"]
+                        };
+                        
+                        // Check if current biome matches any of the allowed habitats for this species
+                        return habitatMatches[speciesData.habitat]?.includes(currentBiome) || false;
                     });
-                    if (Math.random() < updatedData.biodiversityIndex / 100 && possibleNewSpecies.length > 0) {
+                    
+                    // Calculate discovery chance - more generous now
+                    const baseDiscoveryChance = 0.4; // Increased to 40% base chance
+                    const biodiversityBonus = updatedData.biodiversityIndex / 150; // More generous bonus
+                    const discoveryChance = Math.min(baseDiscoveryChance + biodiversityBonus, 0.8); // Cap at 80%
+                    
+                    console.log(`Observing wildlife in ${locationData.name} (${locationData.biome}): ${possibleNewSpecies.length} possible new species`);
+                    
+                    if (Math.random() < discoveryChance && possibleNewSpecies.length > 0) {
                         const newSpecies = possibleNewSpecies[Math.floor(Math.random() * possibleNewSpecies.length)];
                         updatedData.wildlifeObserved.push(newSpecies);
-                        updatedData.biodiversityIndex += 2;
+                        updatedData.biodiversityIndex += 3; // Increased bonus for discovery
+                        
+                        // Ensure storyLog exists and add discovery message
                         if (!updatedData.storyLog) updatedData.storyLog = [];
-                        updatedData.storyLog.push(`🦘 You discovered a ${tasmaniaWildlife[newSpecies].name}!`);
+                        const speciesInfo = tasmaniaWildlife[newSpecies];
+                        updatedData.storyLog.push(`🎉 You discovered a ${speciesInfo.name} (${speciesInfo.rarity})! ${speciesInfo.image} - ${speciesInfo.indicator} indicator`);
+                        
+                        // Special bonus for endangered species
+                        if (speciesInfo.rarity === "endangered") {
+                            updatedData.biodiversityIndex += 2;
+                            updatedData.reputation += 5;
+                        }
+                    } else if (possibleNewSpecies.length > 0) {
+                        // Add message even when no discovery happens
+                        if (!updatedData.storyLog) updatedData.storyLog = [];
+                        updatedData.storyLog.push(`🔍 You observed wildlife but didn't discover any new species this time.`);
                     }
-                    updatedData.ecosystemHealth += 1;
+                    
+                    // Always provide benefits for observation
+                    updatedData.ecosystemHealth += 2;
+                    updatedData.biodiversityIndex += 1;
                     break;
                 case "explore":
                     // Explore new locations
